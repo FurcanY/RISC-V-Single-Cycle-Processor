@@ -16,7 +16,7 @@ TB_FILE   := ./tb/$(TB).sv
 # ========================
 lint:
 	@echo "▶ Lint kontrolü yapılıyor..."
-	verilator --lint-only -Wall --timing -Wno-UNUSED -Wno-CASEINCOMPLETE -Wno-MULTIDRIVEN $(ALL_FILES)
+	verilator --lint-only -Wall --timing -Wno-UNUSED --top-module $(TB) -Wno-CASEINCOMPLETE -Wno-MULTIDRIVEN $(ALL_FILES)
 
 # ========================
 # Build
@@ -41,8 +41,9 @@ run: build
 # ========================
 wave: run
 	@echo "▶ GTKWave açılıyor..."
-	gtkwave --dark dump.vcd
-
+	echo $PATH
+	which gtkwave
+	/usr/bin/gtkwave dump.vcd
 # ========================
 # Temizlik
 # ========================
@@ -62,4 +63,5 @@ help:
 	@echo "  make run TB=modul_tb    -> derle ve çalıştır"
 	@echo "  make wave TB=modul_tb   -> waveform görüntüle"
 	@echo "  make clean              -> tüm geçici dosyaları sil"
-	@echo "  ma
+	@echo "--------------------------------------------------"
+

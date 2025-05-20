@@ -1,6 +1,13 @@
 /*
-okunacak verilerin sıralaması:
-    source_a  source_b  alu_op  result  zero  negative  carry  overflow
+    test dosyasından okunacak verilerin sıralaması:
+    source_a  
+    source_b  
+    alu_op  
+    result  
+    zero  
+    negative  
+    carry  
+    overflow
 */
 module alu_tb; 
     import riscv_pkg::*;
