@@ -4,7 +4,7 @@ package riscv_pkg;
 parameter int XLEN = 32;
 parameter int REG_ADDR_WIDTH = 5;
 parameter int MEM_SIZE = 1024;
-
+parameter int DMEM_SIZE = 1024;
 
 
 /*
@@ -101,15 +101,17 @@ typedef enum logic [2:0] {
     - op'code göre alunun hangi işlemi yaapacağını söyler.
 */
 typedef enum logic [3:0] {  
-    ALU_ADD  = 4'b0000,
-    ALU_SUB  = 4'b0001,
-    ALU_AND  = 4'b0010,
-    ALU_OR   = 4'b0011,
-    ALU_XOR  = 4'b0100,
-    ALU_SLL  = 4'b0101,
-    ALU_SRL  = 4'b0110,
-    ALU_SRA  = 4'b0111,
-    ALU_SLT  = 4'b1000,
-    ALU_SLTU = 4'b1001
+    ALU_ADD    = 4'b0000,
+    ALU_SUB    = 4'b0001,
+    ALU_AND    = 4'b0010,
+    ALU_OR     = 4'b0011,
+    ALU_XOR    = 4'b0100,
+    ALU_SLL    = 4'b0101,
+    ALU_SRL    = 4'b0110,
+    ALU_SRA    = 4'b0111,
+    ALU_SLT    = 4'b1000,
+    ALU_SLTU   = 4'b1001,
+    ALU_LUI    = 4'b1010,  // Load Upper Immediate
+    ALU_AUIPC  = 4'b1011   // Add Upper Immediate to PC
 }alu_op_e;   
 endpackage : riscv_pkg

@@ -43,7 +43,7 @@ wave: run
 	@echo "▶ GTKWave açılıyor..."
 	echo $PATH
 	which gtkwave
-	/usr/bin/gtkwave dump.vcd
+	/usr/bin/gtkwave dumb.vcd
 # ========================
 # Temizlik
 # ========================

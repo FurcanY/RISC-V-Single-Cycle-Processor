@@ -21,6 +21,11 @@ logic            negative_flag ;
 logic            carry_flag    ;  
 logic            overflow_flag ; 
 
+// waveform dosyaları
+initial begin
+    $dumpfile("dumb.vcd");
+    $dumpvars();
+end
 
 //design under unit
 alu dut(
@@ -44,7 +49,7 @@ integer file, r, line = 0, error_count = 0;
 initial begin
     source_a     = 0;
     source_b     = 0;
-    alu_control  = ALU_SRA;
+    alu_control  = ALU_ADD;  // Default operation
 end
 initial begin
     #20;
@@ -67,13 +72,13 @@ initial begin
             negative_flag !== expected_negative ||
             carry_flag !== expected_carry ||
             overflow_flag !== expected_overflow) begin            
-            $display("HATA: Satir %0d", line);
-            $display(" A      = %b", source_a);
-            $display(" B      = %b", source_b);
-            $display(" Op     = %0s", alu_control.name());
-            $display(" Beklenen: R=%b Z=%b N=%b C=%b O=%b",
+            $display("\nHATA: Satir %0d", line);
+            $display("Operasyon: %0s", alu_control.name());
+            $display("A (source_a) = %h", source_a);
+            $display("B (source_b) = %h", source_b);
+            $display("Beklenen: R=%h Z=%b N=%b C=%b O=%b",
                         expected_result, expected_zero, expected_negative, expected_carry, expected_overflow);
-            $display(" Gerçek  : R=%b Z=%b N=%b C=%b O=%b\n",
+            $display("Gerçek  : R=%h Z=%b N=%b C=%b O=%b\n",
                         alu_result, zero_flag, negative_flag, carry_flag, overflow_flag);
             error_count++;
         end
@@ -84,9 +89,9 @@ initial begin
     $fclose(file);
 
     if (error_count == 0)
-        $display("Tum testler basarili! (%0d satir)", line);
+        $display("\n✅ Tüm testler başarılı! (%0d satir)", line);
     else
-        $display("%0d satirda hata bulundu.", error_count);
+        $display("\n❌ %0d satirda hata bulundu.", error_count);
 
     $finish;
 end

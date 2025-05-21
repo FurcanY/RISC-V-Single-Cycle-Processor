@@ -13,7 +13,7 @@ module extend_immediate_tb;
 
     /*
         dosya okuma sirasi
-        imm_source imm_extended imm_source
+        imm_instruction imm_extended imm_source
     
     */
     //----------- gerekli değişkenler --------------
@@ -41,10 +41,11 @@ module extend_immediate_tb;
 
 
 
-        while($feof(file))begin
+        while(!$feof(file))begin
             read = $fscanf (file,"%h %h %d\n",imm_instruction,exp_imm_extended,signal_value);
             imm_source = immediate_type_e'(signal_value); //enum cast islemi
             #10;
+            isTrue(imm_extended,exp_imm_extended);
             line++;
         end
 

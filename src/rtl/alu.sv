@@ -44,6 +44,10 @@ module alu
 );
 
     logic [XLEN:0] temp_result;
+    logic [4:0] shamt;  // Shift amount for I-type shift operations
+
+    // For I-type shift operations, only use lower 5 bits
+    assign shamt = source_b[4:0];
 
     always_comb begin
         temp_result     = 0;
@@ -73,13 +77,29 @@ module alu
             ALU_AND:  alu_result = source_a & source_b;
             ALU_OR:   alu_result = source_a | source_b;
             ALU_XOR:  alu_result = source_a ^ source_b;
-            ALU_SLL:  alu_result = source_a << source_b[4:0];
-            ALU_SRL:  alu_result = source_a >> source_b[4:0];
-            ALU_SRA:  alu_result = $signed(source_a) >>> source_b[4:0];
+            ALU_SLL:  alu_result = source_a << shamt;  // Use 5-bit shamt
+            ALU_SRL:  alu_result = source_a >> shamt;  // Use 5-bit shamt
+            ALU_SRA:  alu_result = $signed(source_a) >>> shamt;  // Use 5-bit shamt
             ALU_SLT:  alu_result = ($signed(source_a) < $signed(source_b)) ? 32'd1 : 32'd0;
             ALU_SLTU: alu_result = (source_a < source_b) ? 32'd1 : 32'd0;
 
-            default: alu_result = 32'd0;
+            // LUI: Load Upper Immediate
+            ALU_LUI: begin
+                alu_result = source_b;  // source_b contains the immediate value
+            end
+
+            // AUIPC: Add Upper Immediate to PC
+            ALU_AUIPC: begin
+                alu_result = source_a + source_b;  // source_a is PC, source_b is immediate
+            end
+
+            default: begin
+                alu_result = 32'd0;
+                zero_flag = 0;
+                negative_flag = 0;
+                carry_flag = 0;
+                overflow_flag = 0;
+            end
         endcase
 
         zero_flag     = (alu_result == 0);
