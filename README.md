@@ -9,8 +9,6 @@
 ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▓█▓▒░        ░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░ 
 ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░   ░▒▓██▓▒░  ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░ 
                                                                                 
-                                                                             
----
 Bu proje, RISC-V RV32I Base Instruction Set kullanılarak tasarlanmış single-cycle bir processor implementasyonunu içermektedir.
 
 ## RV32I Base Instruction Set
