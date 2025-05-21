@@ -1,33 +1,41 @@
 import random
 import os
 
-'''              
-    logic [XLEN-1:0]   data_addr         =  10 bitlik address (DMEM_SIZE = 1024)       
-    logic [XLEN-1:0]   data_write_data   =  memory'ye yazılacak olan veri   
-    logic              data_write_enable =  1 olursa yazma işlemi oluyor
-    logic [XLEN-1:0]   data_read_data    =  memory'den okunan veri
+OUT_FILE = "./test/data_memory_tb_full.txt"
+DMEM_SIZE = 1024
 
+test_vectors = []
 
-    yapılan işlemler:
-        - memory'nin tümüne rastgele veri yaz
-        - daha sonra bu verileri okuma testi yap (testbench içerisinde)
-'''
+for addr in range(DMEM_SIZE):
+    offset = random.choice([0, 1, 2, 3])
+    mem_size = random.choice([0b00, 0b01, 0b10])  # byte, half, word
+    unsigned_load = random.choice([0, 1])         # sign/zero extend
 
-OUT_FILE = "./test/data_memory_tb.txt"
+    if mem_size == 0b00:  # byte
+        wr_data = random.randint(0, 0xFF)
+        full_addr = (addr << 2) + offset
+        exp_data = wr_data if unsigned_load else ((wr_data if wr_data < 0x80 else wr_data - 0x100) & 0xFFFFFFFF)
 
-mem_address = 0
-mem_value   = 0
-mem_values = []
+    elif mem_size == 0b01:  # half
+        wr_data = random.randint(0, 0xFFFF)
+        offset = random.choice([0, 2])  # hizalı erişim
+        full_addr = (addr << 2) + offset
+        exp_data = wr_data if unsigned_load else ((wr_data if wr_data < 0x8000 else wr_data - 0x10000) & 0xFFFFFFFF)
 
-with open(OUT_FILE,"w") as f:
-    for _ in range (1024):
-        mem_address = _
-        mem_value   = random.randint(0,0xFFFFFFFF) #rastgele 32 bitlik veri
-        mem_values.append(mem_value)
+    else:  # word
+        wr_data = random.randint(0, 0xFFFFFFFF)
+        offset = 0
+        full_addr = addr << 2
+        exp_data = wr_data
 
-        f.write (f"{mem_address:03x} {mem_value:08x}\n")
-    for i in range (1024):
-        f.write (f"{mem_values[i]:08x}\n")
+    test_vectors.append((full_addr, wr_data, mem_size, unsigned_load, exp_data))
 
-print (f"testbench ram verileri olusturuldu")
-print (f"Dosya= {os.path.abspath(OUT_FILE)}")
+# Dosyaya yaz
+with open(OUT_FILE, "w") as f:
+    for addr, wr_data, mem_size, unsigned_load, _ in test_vectors:
+        f.write(f"{addr:08x} {wr_data:08x} {mem_size:02b} {unsigned_load}\n")
+    for addr, _, mem_size, unsigned_load, exp in test_vectors:
+        f.write(f"{addr:08x} {mem_size:02b} {unsigned_load} {exp:08x}\n")
+
+print("✅ Test dosyası yazıldı.")
+print(f"📁 Yol: {os.path.abspath(OUT_FILE)}")

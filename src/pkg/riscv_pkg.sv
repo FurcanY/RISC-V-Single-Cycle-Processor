@@ -6,6 +6,37 @@ parameter int REG_ADDR_WIDTH = 5;
 parameter int MEM_SIZE = 1024;
 parameter int DMEM_SIZE = 1024;
 
+// ALU source A selection
+typedef enum logic [1:0] {
+    ALU_SRC_A_RS1 = 2'b00,  // Register 1
+    ALU_SRC_A_PC  = 2'b01,  // Program Counter
+    ALU_SRC_A_ZERO= 2'b10   // Zero
+} alu_src_a_e;
+
+// ALU source B selection
+typedef enum logic [1:0] {
+    ALU_SRC_B_RS2 = 2'b00,  // Register 2
+    ALU_SRC_B_IMM = 2'b01   // Immediate
+} alU_src_b_e;
+
+// Branch type
+typedef enum logic [2:0] {
+    BRANCH_NONE = 3'b000,   // No branch
+    BRANCH_EQ   = 3'b001,   // BEQ
+    BRANCH_NE   = 3'b010,   // BNE
+    BRANCH_LT   = 3'b011,   // BLT
+    BRANCH_GE   = 3'b100,   // BGE
+    BRANCH_LTU  = 3'b101,   // BLTU
+    BRANCH_GEU  = 3'b110    // BGEU
+} branch_type_e;
+
+// PC source selection
+typedef enum logic [1:0] {
+    PC_SRC_PC4   = 2'b00,   // PC + 4
+    PC_SRC_BRANCH= 2'b01,   // Branch target
+    PC_SRC_JAL   = 2'b10,   // JAL target
+    PC_SRC_JALR  = 2'b11    // JALR target
+} pc_src_e;
 
 /*
     --- Instruction OPCODE'lar
