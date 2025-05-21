@@ -4,7 +4,7 @@ module data_memory
     input  logic                  clk,
     input  logic                  mem_read,
     input  logic                  mem_write,
-    input  logic [1:0]            mem_size,       // 00: byte, 01: halfword, 10: word
+    input  mem_size_e             mem_size,       // 00: byte, 01: halfword, 10: word
     input  logic                  unsigned_load,  // 1: zero-extend, 0: sign-extend
     input  logic [31:0]           data_addr,
     input  logic [31:0]           data_write_data,

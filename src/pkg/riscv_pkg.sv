@@ -19,6 +19,12 @@ typedef enum logic [1:0] {
     ALU_SRC_B_IMM = 2'b01   // Immediate
 } alU_src_b_e;
 
+typedef enum logic [1:0] { 
+    MEM_BYTE  = 2'b00,
+    MEM_HALFW = 2'b01,
+    MEM_WORD  = 2'b10
+} mem_size_e;
+
 // Branch type
 typedef enum logic [2:0] {
     BRANCH_NONE = 3'b000,   // No branch
@@ -37,6 +43,12 @@ typedef enum logic [1:0] {
     PC_SRC_JAL   = 2'b10,   // JAL target
     PC_SRC_JALR  = 2'b11    // JALR target
 } pc_src_e;
+
+typedef enum logic [1:0] {
+    RESULT_SRC_ALU = 2'b00,   // ALU result
+    RESULT_SRC_MEM = 2'b01,   // Memory data
+    RESULT_SRC_PC4 = 2'b10    // PC + 4
+} result_src_e;
 
 /*
     --- Instruction OPCODE'lar

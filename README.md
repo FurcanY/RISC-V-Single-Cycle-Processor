@@ -1,5 +1,16 @@
 # RISC-V RV32I Single-Cycle Processor Tasarımı
 
+
+░▒▓███████▓▒░░▒▓█▓▒░░▒▓███████▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░░▒▓███████▓▒░░▒▓█▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░       ░▒▓█▓▒▒▓█▓▒░       ░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░ 
+░▒▓███████▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░       ░▒▓█▓▒▒▓█▓▒░░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░        ░▒▓█▓▓█▓▒░        ░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▓█▓▒░        ░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░ 
+░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░   ░▒▓██▓▒░  ░▒▓███████▓▒░░▒▓████████▓▒░▒▓█▓▒░ 
+                                                                                
+                                                                             
+---
 Bu proje, RISC-V RV32I Base Instruction Set kullanılarak tasarlanmış single-cycle bir processor implementasyonunu içermektedir.
 
 ## RV32I Base Instruction Set
@@ -66,3 +77,6 @@ RV32I, RISC-V mimarisinin temel 32-bit integer instruction set'idir. Aşağıdak
 |**program_counter**|instruction memory'nin adres değerini tutan değer|
 
 
+
+
+**verilator --version:** Verilator 5.016 2023-09-16 rev v5.014-149-g57c816f90

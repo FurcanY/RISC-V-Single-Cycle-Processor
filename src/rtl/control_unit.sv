@@ -1,147 +1,210 @@
 module control_unit
 	import riscv_pkg::*;
 (
-	input  logic [6:0] opcode,
-	input  logic [2:0] funct3,
-	input  logic [6:0] funct7,
+	input  logic [6:0] opcode           ,
+	input  logic [2:0] funct3           ,
+	input  logic [6:0] funct7           ,
+	input  logic [31:0] rs1_data        , // Branch kontrolü için rs1 değeri
+	input  logic [31:0] rs2_data        , // Branch kontrolü için rs2 değeri
+    input  logic        zero_flag       , 
+    input  logic        negative_flag   , 
+    input  logic        carry_flag      , 
+    input  logic        overflow_flag   , 
 
-	// ALU control
+	// ALU kontrol sinyalleri
 	output alu_op_e    alu_control,
-	output alu_src_a_e alu_src_a_sel,
-	output alU_src_b_e alu_src_b_sel,
+	output alu_src_a_e alu_src_a_sel    , // 00=register / 01=program counter / 10=sıfır 
+	output alU_src_b_e alu_src_b_sel    , // 0=register seçimi / 1=immediate seçimi
 
-	// Branch control
-	output branch_type_e branch_type,
-	output pc_src_e     pc_src,
+	// Branch kontrol sinyalleri
+	output branch_type_e branch_type    ,
+	output logic        branch_taken    , // Branch'in alınıp alınmadığını gösteren sinyal
 
-	// Register file control
-	output logic        reg_write,
-	output logic        reg_src_sel,  // 0: ALU result, 1: Memory data
-	output logic        reg_pc4_sel,  // 0: Normal result, 1: PC+4
+	// Register dosyası kontrol sinyalleri
+	output logic        reg_write_enable,
 
-	// Memory control
-	output logic        mem_read,
-	output logic        mem_write,
-	output logic [2:0]  mem_width,    // 000: byte, 001: half, 010: word
+	// Bellek kontrol sinyalleri
+	output logic        mem_read        ,
+	output logic 		mem_write       ,
+	output mem_size_e	mem_size        ,    // 00: byte, 01: yarım kelime, 10: kelime
+	output logic        mem_usign_load  ,    // 1: işaretsiz yükleme, 0: işaretli yükleme
 
-	// Immediate control
-	output immediate_type_e imm_type
+	// Immediate kontrol sinyali
+	output immediate_type_e imm_type    ,
+
+	// Program sayacı kontrol sinyali
+	output pc_src_e 	pc_src          ,
+
+	// Sonuç kaynağı kontrol sinyali
+	output result_src_e result_src      
 );
 
+	// Branch kontrolü için ara sinyaller
+	logic rs1_eq_rs2;
+	logic rs1_lt_rs2;
+	logic rs1_ltu_rs2;
+
+	// Branch karşılaştırma mantığı
+	assign rs1_eq_rs2 = (rs1_data == rs2_data);
+	assign rs1_lt_rs2 = ($signed(rs1_data) < $signed(rs2_data));
+	assign rs1_ltu_rs2 = (rs1_data < rs2_data);
+
+
+
+	// Opcode decoder
 	always_comb begin
-		// Default values
-		alu_control    = ALU_ADD;
-		alu_src_a_sel  = ALU_SRC_A_RS1;
-		alu_src_b_sel  = ALU_SRC_B_RS2;
-		branch_type    = BRANCH_NONE;
-		pc_src         = PC_SRC_PC4;
-		reg_write      = 1'b0;
-		reg_src_sel    = 1'b0;
-		reg_pc4_sel    = 1'b0;
-		mem_read       = 1'b0;
-		mem_write      = 1'b0;
-		mem_width      = 3'b010;  // Default to word
-		imm_type       = IMM_I;
+
+		//varsayılan değerler
+		alu_control      = ALU_ADD;
+		alu_src_a_sel    = ALU_SRC_A_RS1;
+		alu_src_b_sel    = ALU_SRC_B_RS2;
+		branch_type      = BRANCH_NONE;
+		branch_taken     = 1'b0;
+		reg_write_enable = 1'b0;
+		mem_read         = 1'b0;
+		mem_write        = 1'b0;
+		mem_size         = MEM_WORD;
+		mem_usign_load   = 1'b0;
+		imm_type         = IMM_I;
+		pc_src           = PC_SRC_PC4;
+		result_src       = RESULT_SRC_ALU;
 
 		case (opcode)
-			OPCODE_R_TYPE: begin
-				reg_write = 1'b1;
-				case (funct3)
-					3'b000: alu_control = (funct7[5]) ? ALU_SUB : ALU_ADD;
-					3'b001: alu_control = ALU_SLL;
-					3'b010: alu_control = ALU_SLT;
-					3'b011: alu_control = ALU_SLTU;
-					3'b100: alu_control = ALU_XOR;
-					3'b101: alu_control = (funct7[5]) ? ALU_SRA : ALU_SRL;
-					3'b110: alu_control = ALU_OR;
-					3'b111: alu_control = ALU_AND;
-				endcase
+			OPCODE_LUI: begin
+				reg_write_enable = 1;
+				alu_src_a_sel 	 = ALU_SRC_A_ZERO;
+				alu_src_b_sel    = ALU_SRC_B_IMM;
+				imm_type         = IMM_U;
+				result_src       = RESULT_SRC_ALU;
 			end
 
-			OPCODE_I_TYPE: begin
-				reg_write = 1'b1;
-				alu_src_b_sel = ALU_SRC_B_IMM;
-				imm_type = IMM_I;
+			OPCODE_AUIPC: begin
+				alu_control      = ALU_AUIPC;
+				alu_src_a_sel    = ALU_SRC_A_PC;
+				alu_src_b_sel    = ALU_SRC_B_IMM;
+				reg_write_enable = 1'b1;
+				imm_type         = IMM_U;
+				result_src       = RESULT_SRC_ALU;
+			end
+
+			OPCODE_JAL: begin
+				alu_src_a_sel    = ALU_SRC_A_PC;
+				alu_src_b_sel    = ALU_SRC_B_IMM;
+				reg_write_enable = 1'b1;
+				imm_type         = IMM_J;
+				pc_src           = PC_SRC_JAL;
+				result_src       = RESULT_SRC_PC4;
+			end
+
+			OPCODE_JALR: begin
+				alu_src_a_sel    = ALU_SRC_A_RS1;
+				alu_src_b_sel    = ALU_SRC_B_IMM;
+				reg_write_enable = 1'b1;
+				imm_type         = IMM_I;
+				pc_src           = PC_SRC_JALR;
+				result_src       = RESULT_SRC_PC4;
+			end
+
+			OPCODE_BRANCH: begin
+				alu_control      = ALU_ADD; 
+				alu_src_a_sel    = ALU_SRC_A_RS1;
+				alu_src_b_sel    = ALU_SRC_B_RS2;
+				imm_type         = IMM_B;
+				pc_src           = PC_SRC_BRANCH;
 				case (funct3)
-					3'b000: alu_control = ALU_ADD;  // ADDI
-					3'b001: alu_control = ALU_SLL;  // SLLI
-					3'b010: alu_control = ALU_SLT;  // SLTI
-					3'b011: alu_control = ALU_SLTU; // SLTIU
-					3'b100: alu_control = ALU_XOR;  // XORI
-					3'b101: alu_control = (funct7[5]) ? ALU_SRA : ALU_SRL; // SRAI/SRLI
-					3'b110: alu_control = ALU_OR;   // ORI
-					3'b111: alu_control = ALU_AND;  // ANDI
+					FUNCT3_BEQ:  branch_type = BRANCH_EQ;
+					FUNCT3_BNE:  branch_type = BRANCH_NE;
+					FUNCT3_BLT:  branch_type = BRANCH_LT;
+					FUNCT3_BGE:  branch_type = BRANCH_GE;
+					FUNCT3_BLTU: branch_type = BRANCH_LTU;
+					FUNCT3_BGEU: branch_type = BRANCH_GEU;
+					default:     branch_type = BRANCH_NONE;
 				endcase
 			end
 
 			OPCODE_LOAD: begin
-				reg_write = 1'b1;
-				reg_src_sel = 1'b1;  // Memory to register
-				mem_read = 1'b1;
-				alu_src_b_sel = ALU_SRC_B_IMM;
-				imm_type = IMM_I;
+				alu_src_a_sel    = ALU_SRC_A_RS1;
+				alu_src_b_sel    = ALU_SRC_B_IMM;
+				reg_write_enable = 1'b1;
+				mem_read         = 1'b1;
+				imm_type         = IMM_I;
+				result_src       = RESULT_SRC_MEM;
 				case (funct3)
-					3'b000: mem_width = 3'b000;  // LB
-					3'b001: mem_width = 3'b001;  // LH
-					3'b010: mem_width = 3'b010;  // LW
-					3'b100: mem_width = 3'b000;  // LBU
-					3'b101: mem_width = 3'b001;  // LHU
+					FUNCT3_LB:  begin mem_size = MEM_BYTE;  mem_usign_load = 0; end
+					FUNCT3_LH:  begin mem_size = MEM_HALFW; mem_usign_load = 0; end
+					FUNCT3_LW:  begin mem_size = MEM_WORD;  mem_usign_load = 0; end
+					FUNCT3_LBU: begin mem_size = MEM_BYTE;  mem_usign_load = 1; end
+					FUNCT3_LHU: begin mem_size = MEM_HALFW; mem_usign_load = 1; end
+					default:    begin mem_size = MEM_WORD;  mem_usign_load = 0; end
 				endcase
 			end
 
 			OPCODE_STORE: begin
-				mem_write = 1'b1;
-				alu_src_b_sel = ALU_SRC_B_IMM;
-				imm_type = IMM_S;
+				alu_src_a_sel    = ALU_SRC_A_RS1;
+				alu_src_b_sel    = ALU_SRC_B_IMM;
+				mem_write        = 1'b1;
+				imm_type         = IMM_S;
 				case (funct3)
-					3'b000: mem_width = 3'b000;  // SB
-					3'b001: mem_width = 3'b001;  // SH
-					3'b010: mem_width = 3'b010;  // SW
+					FUNCT3_SB: begin mem_size = MEM_BYTE;  end
+					FUNCT3_SH: begin mem_size = MEM_HALFW; end
+					FUNCT3_SW: begin mem_size = MEM_WORD;  end
+					default:   begin mem_size = MEM_WORD;  end
 				endcase
 			end
 
-			OPCODE_BRANCH: begin
-				imm_type = IMM_B;
+			OPCODE_I_TYPE: begin
+				alu_src_a_sel    = ALU_SRC_A_RS1;
+				alu_src_b_sel    = ALU_SRC_B_IMM;
+				reg_write_enable = 1'b1;
+				imm_type         = IMM_I;
+				result_src       = RESULT_SRC_ALU;
 				case (funct3)
-					3'b000: branch_type = BRANCH_EQ;   // BEQ
-					3'b001: branch_type = BRANCH_NE;   // BNE
-					3'b100: branch_type = BRANCH_LT;   // BLT
-					3'b101: branch_type = BRANCH_GE;   // BGE
-					3'b110: branch_type = BRANCH_LTU;  // BLTU
-					3'b111: branch_type = BRANCH_GEU;  // BGEU
+					FUNCT3_ADDI:  alu_control = ALU_ADD;
+					FUNCT3_SLTI:  alu_control = ALU_SLT;
+					FUNCT3_SLTIU: alu_control = ALU_SLTU;
+					FUNCT3_XORI:  alu_control = ALU_XOR;
+					FUNCT3_ORI:   alu_control = ALU_OR;
+					FUNCT3_ANDI:  alu_control = ALU_AND;
+					FUNCT3_SLLI:  alu_control = ALU_SLL;
+					FUNCT3_SRLI:  alu_control = (funct7[5]) ? ALU_SRA : ALU_SRL;
+					default:      alu_control = ALU_ADD;
 				endcase
-				pc_src = PC_SRC_BRANCH;
 			end
 
-			OPCODE_JAL: begin
-				reg_write = 1'b1;
-				reg_pc4_sel = 1'b1;  // Use PC+4 for register write
-				imm_type = IMM_J;
-				pc_src = PC_SRC_JAL;
+			OPCODE_R_TYPE: begin
+				alu_src_a_sel    = ALU_SRC_A_RS1;
+				alu_src_b_sel    = ALU_SRC_B_RS2;
+				reg_write_enable = 1'b1;
+				result_src       = RESULT_SRC_ALU;
+				case (funct3)
+					FUNCT3_ADD:  alu_control = (funct7[5]) ? ALU_SUB : ALU_ADD;
+					FUNCT3_SLL:  alu_control = ALU_SLL;
+					FUNCT3_SLT:  alu_control = ALU_SLT;
+					FUNCT3_SLTU: alu_control = ALU_SLTU;
+					FUNCT3_XOR:  alu_control = ALU_XOR;
+					FUNCT3_SRL:  alu_control = (funct7[5]) ? ALU_SRA : ALU_SRL;
+					FUNCT3_OR:   alu_control = ALU_OR;
+					FUNCT3_AND:  alu_control = ALU_AND;
+					default:     alu_control = ALU_ADD;
+				endcase
 			end
 
-			OPCODE_JALR: begin
-				reg_write = 1'b1;
-				reg_pc4_sel = 1'b1;  // Use PC+4 for register write
-				imm_type = IMM_I;
-				pc_src = PC_SRC_JALR;
+			default: begin
+				// Varsayılan değerler kullanılır
 			end
+		endcase
+	end
 
-			OPCODE_LUI: begin
-				reg_write = 1'b1;
-				alu_control = ALU_LUI;
-				alu_src_a_sel = ALU_SRC_A_ZERO;
-				alu_src_b_sel = ALU_SRC_B_IMM;
-				imm_type = IMM_U;
-			end
-
-			OPCODE_AUIPC: begin
-				reg_write = 1'b1;
-				alu_control = ALU_AUIPC;
-				alu_src_a_sel = ALU_SRC_A_PC;
-				alu_src_b_sel = ALU_SRC_B_IMM;
-				imm_type = IMM_U;
-			end
+	// Branch kontrolü
+	always_comb begin
+		case (branch_type)
+			BRANCH_EQ:  branch_taken = zero_flag;                    // rs1 == rs2
+			BRANCH_NE:  branch_taken = ~zero_flag;                   // rs1 != rs2
+			BRANCH_LT:  branch_taken = negative_flag ^ overflow_flag; // rs1 < rs2 (signed)
+			BRANCH_GE:  branch_taken = ~(negative_flag ^ overflow_flag); // rs1 >= rs2 (signed)
+			BRANCH_LTU: branch_taken = carry_flag;                   // rs1 < rs2 (unsigned)
+			BRANCH_GEU: branch_taken = ~carry_flag;                  // rs1 >= rs2 (unsigned)
+			default:    branch_taken = 1'b0;
 		endcase
 	end
 
