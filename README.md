@@ -59,11 +59,16 @@ RV32I, RISC-V mimarisinin temel 32-bit integer instruction set'idir. Aşağıdak
 	
 | Modül | Açıklama |
 |--------|----------|
-|**alu**|aritmetik lojik ve kaydırma işlemlerini yapan birim|
+|**program_counter**|instruction memory'nin adres değerini tutan değer|
 |**instruction_memory**|buyrukların tutulduğu hafıza|
 |**register_file**|kaydedicilere ulaştığımız, verilerini değiştirdiğimiz birim|
 |**immediate_extend**|instruction tipine göre immediate değerini genişleten birim|
-|**program_counter**|instruction memory'nin adres değerini tutan değer|
+|**alu**|aritmetik lojik ve kaydırma işlemlerini yapan birim|
+|**data_memory**|verilerin yazılıp, okunabildiği birim|
+|**control_unit**|her bir modülün çalışması için sinyal oluşturan birim|
+|**core_model**|bütün modüllerin birleştiği, tek vuruşluk işlemci|
+
+
 
 
 
