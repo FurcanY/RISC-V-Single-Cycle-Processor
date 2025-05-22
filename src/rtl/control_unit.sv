@@ -4,20 +4,17 @@ module control_unit
 	input  logic [6:0] opcode           ,
 	input  logic [2:0] funct3           ,
 	input  logic [6:0] funct7           ,
-	input  logic [31:0] rs1_data        , // Branch kontrolü için rs1 değeri
-	input  logic [31:0] rs2_data        , // Branch kontrolü için rs2 değeri
     input  logic        zero_flag       , 
     input  logic        negative_flag   , 
     input  logic        carry_flag      , 
     input  logic        overflow_flag   , 
 
 	// ALU kontrol sinyalleri
-	output alu_op_e    alu_control,
+	output alu_op_e    alu_control      ,
 	output alu_src_a_e alu_src_a_sel    , // 00=register / 01=program counter / 10=sıfır 
-	output alU_src_b_e alu_src_b_sel    , // 0=register seçimi / 1=immediate seçimi
+	output alu_src_b_e alu_src_b_sel    , // 0=register seçimi / 1=immediate seçimi
 
 	// Branch kontrol sinyalleri
-	output branch_type_e branch_type    ,
 	output logic        branch_taken    , // Branch'in alınıp alınmadığını gösteren sinyal
 
 	// Register dosyası kontrol sinyalleri
@@ -30,7 +27,7 @@ module control_unit
 	output logic        mem_usign_load  ,    // 1: işaretsiz yükleme, 0: işaretli yükleme
 
 	// Immediate kontrol sinyali
-	output immediate_type_e imm_type    ,
+	output immediate_type_e imm_src    ,
 
 	// Program sayacı kontrol sinyali
 	output pc_src_e 	pc_src          ,
@@ -39,15 +36,7 @@ module control_unit
 	output result_src_e result_src      
 );
 
-	// Branch kontrolü için ara sinyaller
-	logic rs1_eq_rs2;
-	logic rs1_lt_rs2;
-	logic rs1_ltu_rs2;
 
-	// Branch karşılaştırma mantığı
-	assign rs1_eq_rs2 = (rs1_data == rs2_data);
-	assign rs1_lt_rs2 = ($signed(rs1_data) < $signed(rs2_data));
-	assign rs1_ltu_rs2 = (rs1_data < rs2_data);
 
 
 
@@ -58,14 +47,13 @@ module control_unit
 		alu_control      = ALU_ADD;
 		alu_src_a_sel    = ALU_SRC_A_RS1;
 		alu_src_b_sel    = ALU_SRC_B_RS2;
-		branch_type      = BRANCH_NONE;
 		branch_taken     = 1'b0;
 		reg_write_enable = 1'b0;
 		mem_read         = 1'b0;
 		mem_write        = 1'b0;
 		mem_size         = MEM_WORD;
 		mem_usign_load   = 1'b0;
-		imm_type         = IMM_I;
+		imm_src          = IMM_I;
 		pc_src           = PC_SRC_PC4;
 		result_src       = RESULT_SRC_ALU;
 
@@ -74,7 +62,7 @@ module control_unit
 				reg_write_enable = 1;
 				alu_src_a_sel 	 = ALU_SRC_A_ZERO;
 				alu_src_b_sel    = ALU_SRC_B_IMM;
-				imm_type         = IMM_U;
+				imm_src         = IMM_U;
 				result_src       = RESULT_SRC_ALU;
 			end
 
@@ -83,7 +71,7 @@ module control_unit
 				alu_src_a_sel    = ALU_SRC_A_PC;
 				alu_src_b_sel    = ALU_SRC_B_IMM;
 				reg_write_enable = 1'b1;
-				imm_type         = IMM_U;
+				imm_src         = IMM_U;
 				result_src       = RESULT_SRC_ALU;
 			end
 
@@ -91,8 +79,8 @@ module control_unit
 				alu_src_a_sel    = ALU_SRC_A_PC;
 				alu_src_b_sel    = ALU_SRC_B_IMM;
 				reg_write_enable = 1'b1;
-				imm_type         = IMM_J;
-				pc_src           = PC_SRC_JAL;
+				imm_src         = IMM_J;
+				pc_src           = PC_SRC_BRANCH_JAL;
 				result_src       = RESULT_SRC_PC4;
 			end
 
@@ -100,7 +88,7 @@ module control_unit
 				alu_src_a_sel    = ALU_SRC_A_RS1;
 				alu_src_b_sel    = ALU_SRC_B_IMM;
 				reg_write_enable = 1'b1;
-				imm_type         = IMM_I;
+				imm_src         = IMM_I;
 				pc_src           = PC_SRC_JALR;
 				result_src       = RESULT_SRC_PC4;
 			end
@@ -109,16 +97,16 @@ module control_unit
 				alu_control      = ALU_ADD; 
 				alu_src_a_sel    = ALU_SRC_A_RS1;
 				alu_src_b_sel    = ALU_SRC_B_RS2;
-				imm_type         = IMM_B;
-				pc_src           = PC_SRC_BRANCH;
+				imm_src         = IMM_B;
+				pc_src           = PC_SRC_BRANCH_JAL;
 				case (funct3)
-					FUNCT3_BEQ:  branch_type = BRANCH_EQ;
-					FUNCT3_BNE:  branch_type = BRANCH_NE;
-					FUNCT3_BLT:  branch_type = BRANCH_LT;
-					FUNCT3_BGE:  branch_type = BRANCH_GE;
-					FUNCT3_BLTU: branch_type = BRANCH_LTU;
-					FUNCT3_BGEU: branch_type = BRANCH_GEU;
-					default:     branch_type = BRANCH_NONE;
+					FUNCT3_BEQ:  branch_taken = zero_flag;                    // rs1 == rs2
+					FUNCT3_BNE:  branch_taken = ~zero_flag;                   // rs1 != rs2
+					FUNCT3_BLT:  branch_taken = negative_flag ^ overflow_flag; // rs1 < rs2 (signed)
+					FUNCT3_BGE:  branch_taken = ~(negative_flag ^ overflow_flag); // rs1 >= rs2 (signed)
+					FUNCT3_BLTU: branch_taken = carry_flag;                   // rs1 < rs2 (unsigned)
+					FUNCT3_BGEU: branch_taken = ~carry_flag;                  // rs1 >= rs2 (unsigned)
+					default:     branch_taken = 1'b0;
 				endcase
 			end
 
@@ -127,7 +115,7 @@ module control_unit
 				alu_src_b_sel    = ALU_SRC_B_IMM;
 				reg_write_enable = 1'b1;
 				mem_read         = 1'b1;
-				imm_type         = IMM_I;
+				imm_src         = IMM_I;
 				result_src       = RESULT_SRC_MEM;
 				case (funct3)
 					FUNCT3_LB:  begin mem_size = MEM_BYTE;  mem_usign_load = 0; end
@@ -143,7 +131,7 @@ module control_unit
 				alu_src_a_sel    = ALU_SRC_A_RS1;
 				alu_src_b_sel    = ALU_SRC_B_IMM;
 				mem_write        = 1'b1;
-				imm_type         = IMM_S;
+				imm_src         = IMM_S;
 				case (funct3)
 					FUNCT3_SB: begin mem_size = MEM_BYTE;  end
 					FUNCT3_SH: begin mem_size = MEM_HALFW; end
@@ -156,7 +144,7 @@ module control_unit
 				alu_src_a_sel    = ALU_SRC_A_RS1;
 				alu_src_b_sel    = ALU_SRC_B_IMM;
 				reg_write_enable = 1'b1;
-				imm_type         = IMM_I;
+				imm_src         = IMM_I;
 				result_src       = RESULT_SRC_ALU;
 				case (funct3)
 					FUNCT3_ADDI:  alu_control = ALU_ADD;
@@ -192,19 +180,6 @@ module control_unit
 			default: begin
 				// Varsayılan değerler kullanılır
 			end
-		endcase
-	end
-
-	// Branch kontrolü
-	always_comb begin
-		case (branch_type)
-			BRANCH_EQ:  branch_taken = zero_flag;                    // rs1 == rs2
-			BRANCH_NE:  branch_taken = ~zero_flag;                   // rs1 != rs2
-			BRANCH_LT:  branch_taken = negative_flag ^ overflow_flag; // rs1 < rs2 (signed)
-			BRANCH_GE:  branch_taken = ~(negative_flag ^ overflow_flag); // rs1 >= rs2 (signed)
-			BRANCH_LTU: branch_taken = carry_flag;                   // rs1 < rs2 (unsigned)
-			BRANCH_GEU: branch_taken = ~carry_flag;                  // rs1 >= rs2 (unsigned)
-			default:    branch_taken = 1'b0;
 		endcase
 	end
 

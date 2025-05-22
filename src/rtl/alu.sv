@@ -35,7 +35,7 @@ module alu
     input  logic [XLEN-1:0] source_a,
     input  logic [XLEN-1:0] source_b,
     input  alu_op_e         alu_control,
-
+    
     output logic [XLEN-1:0] alu_result,
     output logic            zero_flag,
     output logic            negative_flag,

@@ -6,8 +6,6 @@ module control_unit_tb;
     logic [6:0]  opcode;
     logic [2:0]  funct3;
     logic [6:0]  funct7;
-    logic [31:0] rs1_data;
-    logic [31:0] rs2_data;
     logic        zero_flag;
     logic        negative_flag;
     logic        carry_flag;
@@ -16,8 +14,7 @@ module control_unit_tb;
     // Çıkış sinyalleri
     alu_op_e        alu_control;
     alu_src_a_e     alu_src_a_sel;
-    alU_src_b_e     alu_src_b_sel;
-    branch_type_e   branch_type;
+    alu_src_b_e     alu_src_b_sel;
     logic           branch_taken;
     logic           reg_write_enable;
     logic           mem_read;
@@ -33,23 +30,25 @@ module control_unit_tb;
         .opcode(opcode),
         .funct3(funct3),
         .funct7(funct7),
-        .rs1_data(rs1_data),
-        .rs2_data(rs2_data),
         .zero_flag(zero_flag),
         .negative_flag(negative_flag),
         .carry_flag(carry_flag),
         .overflow_flag(overflow_flag),
+
         .alu_control(alu_control),
         .alu_src_a_sel(alu_src_a_sel),
         .alu_src_b_sel(alu_src_b_sel),
-        .branch_type(branch_type),
+
         .branch_taken(branch_taken),
+
         .reg_write_enable(reg_write_enable),
+
         .mem_read(mem_read),
         .mem_write(mem_write),
         .mem_size(mem_size),
         .mem_usign_load(mem_usign_load),
-        .imm_type(imm_type),
+
+        .imm_src(imm_type),
         .pc_src(pc_src),
         .result_src(result_src)
     );
@@ -61,8 +60,6 @@ module control_unit_tb;
     logic [6:0]  opcode_arr     [NUM_TESTS];
     logic [2:0]  funct3_arr     [NUM_TESTS];
     logic [6:0]  funct7_arr     [NUM_TESTS];
-    logic [31:0] rs1_data_arr   [NUM_TESTS];
-    logic [31:0] rs2_data_arr   [NUM_TESTS];
     logic        zero_flag_arr  [NUM_TESTS];
     logic        negative_flag_arr [NUM_TESTS];
     logic        carry_flag_arr [NUM_TESTS];
@@ -70,8 +67,7 @@ module control_unit_tb;
 
     alu_op_e        exp_alu_control_arr   [NUM_TESTS];
     alu_src_a_e     exp_alu_src_a_sel_arr [NUM_TESTS];
-    alU_src_b_e     exp_alu_src_b_sel_arr [NUM_TESTS];
-    branch_type_e   exp_branch_type_arr   [NUM_TESTS];
+    alu_src_b_e     exp_alu_src_b_sel_arr [NUM_TESTS];
     logic           exp_branch_taken_arr  [NUM_TESTS];
     logic           exp_reg_write_enable_arr [NUM_TESTS];
     logic           exp_mem_read_arr      [NUM_TESTS];
@@ -86,7 +82,6 @@ module control_unit_tb;
         if (alu_control !== exp_alu_control_arr[i]) begin $display("FAILED[%0d]: alu_control", i); error_count++; end
         if (alu_src_a_sel !== exp_alu_src_a_sel_arr[i]) begin $display("FAILED[%0d]: alu_src_a_sel", i); error_count++; end
         if (alu_src_b_sel !== exp_alu_src_b_sel_arr[i]) begin $display("FAILED[%0d]: alu_src_b_sel", i); error_count++; end
-        if (branch_type !== exp_branch_type_arr[i]) begin $display("FAILED[%0d]: branch_type", i); error_count++; end
         if (branch_taken !== exp_branch_taken_arr[i]) begin $display("FAILED[%0d]: branch_taken", i); error_count++; end
         if (reg_write_enable !== exp_reg_write_enable_arr[i]) begin $display("FAILED[%0d]: reg_write_enable", i); error_count++; end
         if (mem_read !== exp_mem_read_arr[i]) begin $display("FAILED[%0d]: mem_read", i); error_count++; end
@@ -106,14 +101,11 @@ module control_unit_tb;
         opcode_arr[0] = OPCODE_LUI;
         funct3_arr[0] = 3'b000;
         funct7_arr[0] = 7'b0000000;
-        rs1_data_arr[0] = 32'h0000_0000;
-        rs2_data_arr[0] = 32'h0000_0000;
         zero_flag_arr[0] = 0; negative_flag_arr[0] = 0;
         carry_flag_arr[0] = 0; overflow_flag_arr[0] = 0;
         exp_alu_control_arr[0] = ALU_ADD;
         exp_alu_src_a_sel_arr[0] = ALU_SRC_A_ZERO;
         exp_alu_src_b_sel_arr[0] = ALU_SRC_B_IMM;
-        exp_branch_type_arr[0] = BRANCH_NONE;
         exp_branch_taken_arr[0] = 0;
         exp_reg_write_enable_arr[0] = 1;
         exp_mem_read_arr[0] = 0;
@@ -128,14 +120,11 @@ module control_unit_tb;
         opcode_arr[1] = OPCODE_AUIPC;
         funct3_arr[1] = 3'b000;
         funct7_arr[1] = 7'b0000000;
-        rs1_data_arr[1] = 32'h0000_0000;
-        rs2_data_arr[1] = 32'h0000_0000;
         zero_flag_arr[1] = 0; negative_flag_arr[1] = 0;
         carry_flag_arr[1] = 0; overflow_flag_arr[1] = 0;
         exp_alu_control_arr[1] = ALU_AUIPC;
         exp_alu_src_a_sel_arr[1] = ALU_SRC_A_PC;
         exp_alu_src_b_sel_arr[1] = ALU_SRC_B_IMM;
-        exp_branch_type_arr[1] = BRANCH_NONE;
         exp_branch_taken_arr[1] = 0;
         exp_reg_write_enable_arr[1] = 1;
         exp_mem_read_arr[1] = 0;
@@ -150,14 +139,11 @@ module control_unit_tb;
         opcode_arr[2] = OPCODE_BRANCH;
         funct3_arr[2] = FUNCT3_BEQ;
         funct7_arr[2] = 7'b0000000;
-        rs1_data_arr[2] = 32'h1234_5678;
-        rs2_data_arr[2] = 32'h1234_5678;
         zero_flag_arr[2] = 1; negative_flag_arr[2] = 0;
         carry_flag_arr[2] = 0; overflow_flag_arr[2] = 0;
         exp_alu_control_arr[2] = ALU_ADD;
         exp_alu_src_a_sel_arr[2] = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[2] = ALU_SRC_B_RS2;
-        exp_branch_type_arr[2] = BRANCH_EQ;
         exp_branch_taken_arr[2] = 1;
         exp_reg_write_enable_arr[2] = 0;
         exp_mem_read_arr[2] = 0;
@@ -165,21 +151,18 @@ module control_unit_tb;
         exp_mem_size_arr[2] = MEM_WORD;
         exp_mem_usign_load_arr[2] = 0;
         exp_imm_type_arr[2] = IMM_B;
-        exp_pc_src_arr[2] = PC_SRC_BRANCH;
+        exp_pc_src_arr[2] = PC_SRC_BRANCH_JAL;
         exp_result_src_arr[2] = RESULT_SRC_ALU;
 
         opcode_arr[3] = OPCODE_JAL;
         funct3_arr[3] = 3'b000;
         funct7_arr[3] = 7'b0000000;
-        rs1_data_arr[3] = 32'h00000000;
-        rs2_data_arr[3] = 32'h00000000;
         zero_flag_arr[3] = 0; negative_flag_arr[3] = 0;
         carry_flag_arr[3] = 0; overflow_flag_arr[3] = 0;
 
         exp_alu_control_arr[3]       = ALU_ADD;
         exp_alu_src_a_sel_arr[3]     = ALU_SRC_A_PC;
         exp_alu_src_b_sel_arr[3]     = ALU_SRC_B_IMM;
-        exp_branch_type_arr[3]       = BRANCH_NONE;
         exp_branch_taken_arr[3]      = 0;
         exp_reg_write_enable_arr[3]  = 1;
         exp_mem_read_arr[3]          = 0;
@@ -187,21 +170,18 @@ module control_unit_tb;
         exp_mem_size_arr[3]          = MEM_WORD;
         exp_mem_usign_load_arr[3]    = 0;
         exp_imm_type_arr[3]          = IMM_J;
-        exp_pc_src_arr[3]            = PC_SRC_JAL;
+        exp_pc_src_arr[3]            = PC_SRC_BRANCH_JAL;
         exp_result_src_arr[3]        = RESULT_SRC_PC4;
 
         opcode_arr[4] = OPCODE_JALR;
         funct3_arr[4] = 3'b000;
         funct7_arr[4] = 7'b0000000;
-        rs1_data_arr[4] = 32'h1000;
-        rs2_data_arr[4] = 32'h00000000;
         zero_flag_arr[4] = 0; negative_flag_arr[4] = 0;
         carry_flag_arr[4] = 0; overflow_flag_arr[4] = 0;
 
         exp_alu_control_arr[4]       = ALU_ADD;
         exp_alu_src_a_sel_arr[4]     = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[4]     = ALU_SRC_B_IMM;
-        exp_branch_type_arr[4]       = BRANCH_NONE;
         exp_branch_taken_arr[4]      = 0;
         exp_reg_write_enable_arr[4]  = 1;
         exp_mem_read_arr[4]          = 0;
@@ -215,15 +195,12 @@ module control_unit_tb;
         opcode_arr[5] = OPCODE_LOAD;
         funct3_arr[5] = FUNCT3_LW;
         funct7_arr[5] = 7'b0000000;
-        rs1_data_arr[5] = 32'h00000004;
-        rs2_data_arr[5] = 32'h00000000;
         zero_flag_arr[5] = 0; negative_flag_arr[5] = 0;
         carry_flag_arr[5] = 0; overflow_flag_arr[5] = 0;
 
         exp_alu_control_arr[5]       = ALU_ADD;
         exp_alu_src_a_sel_arr[5]     = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[5]     = ALU_SRC_B_IMM;
-        exp_branch_type_arr[5]       = BRANCH_NONE;
         exp_branch_taken_arr[5]      = 0;
         exp_reg_write_enable_arr[5]  = 1;
         exp_mem_read_arr[5]          = 1;
@@ -237,15 +214,12 @@ module control_unit_tb;
         opcode_arr[6] = OPCODE_STORE;
         funct3_arr[6] = FUNCT3_SW;
         funct7_arr[6] = 7'b0000000;
-        rs1_data_arr[6] = 32'h00000008;
-        rs2_data_arr[6] = 32'h00000010;
         zero_flag_arr[6] = 0; negative_flag_arr[6] = 0;
         carry_flag_arr[6] = 0; overflow_flag_arr[6] = 0;
 
         exp_alu_control_arr[6]       = ALU_ADD;
         exp_alu_src_a_sel_arr[6]     = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[6]     = ALU_SRC_B_IMM;
-        exp_branch_type_arr[6]       = BRANCH_NONE;
         exp_branch_taken_arr[6]      = 0;
         exp_reg_write_enable_arr[6]  = 0;
         exp_mem_read_arr[6]          = 0;
@@ -259,15 +233,12 @@ module control_unit_tb;
         opcode_arr[7] = OPCODE_I_TYPE;
         funct3_arr[7] = FUNCT3_ADDI;
         funct7_arr[7] = 7'b0000000;
-        rs1_data_arr[7] = 32'h00000005;
-        rs2_data_arr[7] = 32'h00000000;
         zero_flag_arr[7] = 0; negative_flag_arr[7] = 0;
         carry_flag_arr[7] = 0; overflow_flag_arr[7] = 0;
 
         exp_alu_control_arr[7]       = ALU_ADD;
         exp_alu_src_a_sel_arr[7]     = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[7]     = ALU_SRC_B_IMM;
-        exp_branch_type_arr[7]       = BRANCH_NONE;
         exp_branch_taken_arr[7]      = 0;
         exp_reg_write_enable_arr[7]  = 1;
         exp_mem_read_arr[7]          = 0;
@@ -287,8 +258,6 @@ module control_unit_tb;
             opcode        = opcode_arr[i];
             funct3        = funct3_arr[i];
             funct7        = funct7_arr[i];
-            rs1_data      = rs1_data_arr[i];
-            rs2_data      = rs2_data_arr[i];
             zero_flag     = zero_flag_arr[i];
             negative_flag = negative_flag_arr[i];
             carry_flag    = carry_flag_arr[i];
