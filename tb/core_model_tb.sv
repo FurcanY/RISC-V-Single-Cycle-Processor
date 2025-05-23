@@ -49,7 +49,7 @@ initial begin
     $finish;
 
 end
-// tamamladığı pc, tamamladığı komutu, tammaladığı reg ve değeri, mem addresi mem değeri
+
 
 always @(posedge clk ) begin
     logic [31:0] current_instruction = dut.IM.instruction_mem[dut.IM.pc_in[$clog2(MEM_SIZE*4)-1:2]];
