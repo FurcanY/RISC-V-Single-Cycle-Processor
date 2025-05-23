@@ -30,7 +30,7 @@ typedef enum logic [1:0] {
 typedef enum logic [1:0] {
     PC_SRC_PC4   = 2'b00,   // PC + 4
     PC_SRC_BRANCH_JAL= 2'b01,   // Branch target, and jal
-    PC_SRC_JALR  = 2'b10    // JALR target
+    PC_SRC_JALR  = 2'b11    // JALR target
 } pc_src_e;
 
 typedef enum logic [1:0] {

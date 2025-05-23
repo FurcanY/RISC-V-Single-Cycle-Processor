@@ -10,7 +10,6 @@ module core_model
 	alu_op_e         alu_control      ;     
 	alu_src_a_e      alu_src_a_sel    ;
 	alu_src_b_e      alu_src_b_sel    ; 
-	logic            branch_taken     ;
 	logic            reg_write_enable ;
 	logic            mem_read         ;
 	logic 		     mem_write        ;
@@ -69,7 +68,6 @@ module core_model
         .alu_control     (alu_control         ),
         .alu_src_a_sel   (alu_src_a_sel       ),
         .alu_src_b_sel   (alu_src_b_sel       ),
-        .branch_taken    (branch_taken        ),
         .reg_write_enable(reg_write_enable    ),
         .mem_read        (mem_read            ),
         .mem_write       (mem_write           ),
@@ -88,7 +86,7 @@ module core_model
     );
 
     instruction_memory IM (
-        .pc_in       (pc_current  ), //pc_next -> pc_in
+        .pc_in       (pc_current  ),
         .instruction (instruction )
     );
 

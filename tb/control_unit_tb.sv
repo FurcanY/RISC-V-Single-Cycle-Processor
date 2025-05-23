@@ -15,7 +15,6 @@ module control_unit_tb;
     alu_op_e        alu_control;
     alu_src_a_e     alu_src_a_sel;
     alu_src_b_e     alu_src_b_sel;
-    logic           branch_taken;
     logic           reg_write_enable;
     logic           mem_read;
     logic           mem_write;
@@ -39,7 +38,6 @@ module control_unit_tb;
         .alu_src_a_sel(alu_src_a_sel),
         .alu_src_b_sel(alu_src_b_sel),
 
-        .branch_taken(branch_taken),
 
         .reg_write_enable(reg_write_enable),
 
@@ -68,7 +66,6 @@ module control_unit_tb;
     alu_op_e        exp_alu_control_arr   [NUM_TESTS];
     alu_src_a_e     exp_alu_src_a_sel_arr [NUM_TESTS];
     alu_src_b_e     exp_alu_src_b_sel_arr [NUM_TESTS];
-    logic           exp_branch_taken_arr  [NUM_TESTS];
     logic           exp_reg_write_enable_arr [NUM_TESTS];
     logic           exp_mem_read_arr      [NUM_TESTS];
     logic           exp_mem_write_arr     [NUM_TESTS];
@@ -82,7 +79,6 @@ module control_unit_tb;
         if (alu_control !== exp_alu_control_arr[i]) begin $display("FAILED[%0d]: alu_control", i); error_count++; end
         if (alu_src_a_sel !== exp_alu_src_a_sel_arr[i]) begin $display("FAILED[%0d]: alu_src_a_sel", i); error_count++; end
         if (alu_src_b_sel !== exp_alu_src_b_sel_arr[i]) begin $display("FAILED[%0d]: alu_src_b_sel", i); error_count++; end
-        if (branch_taken !== exp_branch_taken_arr[i]) begin $display("FAILED[%0d]: branch_taken", i); error_count++; end
         if (reg_write_enable !== exp_reg_write_enable_arr[i]) begin $display("FAILED[%0d]: reg_write_enable", i); error_count++; end
         if (mem_read !== exp_mem_read_arr[i]) begin $display("FAILED[%0d]: mem_read", i); error_count++; end
         if (mem_write !== exp_mem_write_arr[i]) begin $display("FAILED[%0d]: mem_write", i); error_count++; end
@@ -106,7 +102,6 @@ module control_unit_tb;
         exp_alu_control_arr[0] = ALU_ADD;
         exp_alu_src_a_sel_arr[0] = ALU_SRC_A_ZERO;
         exp_alu_src_b_sel_arr[0] = ALU_SRC_B_IMM;
-        exp_branch_taken_arr[0] = 0;
         exp_reg_write_enable_arr[0] = 1;
         exp_mem_read_arr[0] = 0;
         exp_mem_write_arr[0] = 0;
@@ -125,7 +120,6 @@ module control_unit_tb;
         exp_alu_control_arr[1] = ALU_AUIPC;
         exp_alu_src_a_sel_arr[1] = ALU_SRC_A_PC;
         exp_alu_src_b_sel_arr[1] = ALU_SRC_B_IMM;
-        exp_branch_taken_arr[1] = 0;
         exp_reg_write_enable_arr[1] = 1;
         exp_mem_read_arr[1] = 0;
         exp_mem_write_arr[1] = 0;
@@ -144,7 +138,6 @@ module control_unit_tb;
         exp_alu_control_arr[2] = ALU_ADD;
         exp_alu_src_a_sel_arr[2] = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[2] = ALU_SRC_B_RS2;
-        exp_branch_taken_arr[2] = 1;
         exp_reg_write_enable_arr[2] = 0;
         exp_mem_read_arr[2] = 0;
         exp_mem_write_arr[2] = 0;
@@ -163,7 +156,6 @@ module control_unit_tb;
         exp_alu_control_arr[3]       = ALU_ADD;
         exp_alu_src_a_sel_arr[3]     = ALU_SRC_A_PC;
         exp_alu_src_b_sel_arr[3]     = ALU_SRC_B_IMM;
-        exp_branch_taken_arr[3]      = 0;
         exp_reg_write_enable_arr[3]  = 1;
         exp_mem_read_arr[3]          = 0;
         exp_mem_write_arr[3]         = 0;
@@ -182,7 +174,6 @@ module control_unit_tb;
         exp_alu_control_arr[4]       = ALU_ADD;
         exp_alu_src_a_sel_arr[4]     = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[4]     = ALU_SRC_B_IMM;
-        exp_branch_taken_arr[4]      = 0;
         exp_reg_write_enable_arr[4]  = 1;
         exp_mem_read_arr[4]          = 0;
         exp_mem_write_arr[4]         = 0;
@@ -201,7 +192,6 @@ module control_unit_tb;
         exp_alu_control_arr[5]       = ALU_ADD;
         exp_alu_src_a_sel_arr[5]     = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[5]     = ALU_SRC_B_IMM;
-        exp_branch_taken_arr[5]      = 0;
         exp_reg_write_enable_arr[5]  = 1;
         exp_mem_read_arr[5]          = 1;
         exp_mem_write_arr[5]         = 0;
@@ -220,7 +210,6 @@ module control_unit_tb;
         exp_alu_control_arr[6]       = ALU_ADD;
         exp_alu_src_a_sel_arr[6]     = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[6]     = ALU_SRC_B_IMM;
-        exp_branch_taken_arr[6]      = 0;
         exp_reg_write_enable_arr[6]  = 0;
         exp_mem_read_arr[6]          = 0;
         exp_mem_write_arr[6]         = 1;
@@ -239,7 +228,6 @@ module control_unit_tb;
         exp_alu_control_arr[7]       = ALU_ADD;
         exp_alu_src_a_sel_arr[7]     = ALU_SRC_A_RS1;
         exp_alu_src_b_sel_arr[7]     = ALU_SRC_B_IMM;
-        exp_branch_taken_arr[7]      = 0;
         exp_reg_write_enable_arr[7]  = 1;
         exp_mem_read_arr[7]          = 0;
         exp_mem_write_arr[7]         = 0;

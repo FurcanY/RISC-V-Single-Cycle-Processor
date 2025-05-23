@@ -54,7 +54,7 @@ RV32I, RISC-V mimarisinin temel 32-bit integer instruction set'idir. Aşağıdak
 - `jalr rd, offset(rs1)`: Jump and link register
 ---
 
-![](docs/single-cycle-processor.png)
+![](docs/SingleCycleProcessor.jpg)
 ---
 	
 | Modül | Açıklama |

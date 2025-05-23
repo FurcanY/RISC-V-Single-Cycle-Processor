@@ -69,9 +69,9 @@ module alu
             ALU_SUB: begin
                 temp_result    = source_a - source_b;
                 alu_result     = temp_result[XLEN-1:0];
-                carry_flag     = temp_result[XLEN];
+                carry_flag     = (source_a >= source_b);
                 overflow_flag  = (source_a[XLEN-1] != source_b[XLEN-1]) &&
-                                 (alu_result[XLEN-1] != source_a[XLEN-1]);
+                                (alu_result[XLEN-1] != source_a[XLEN-1]);
             end
 
             ALU_AND:  alu_result = source_a & source_b;

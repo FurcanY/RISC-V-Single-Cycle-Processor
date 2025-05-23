@@ -14,8 +14,7 @@ module control_unit
 	output alu_src_a_e alu_src_a_sel    , // 00=register / 01=program counter / 10=sıfır 
 	output alu_src_b_e alu_src_b_sel    , // 0=register seçimi / 1=immediate seçimi
 
-	// Branch kontrol sinyalleri
-	output logic        branch_taken    , // Branch'in alınıp alınmadığını gösteren sinyal
+	
 
 	// Register dosyası kontrol sinyalleri
 	output logic        reg_write_enable,
@@ -36,7 +35,8 @@ module control_unit
 	output result_src_e result_src      
 );
 
-
+	// Branch kontrol sinyalleri
+	logic        branch_taken    ; // Branch'in alınıp alınmadığını gösteren sinyal
 
 
 
@@ -94,11 +94,11 @@ module control_unit
 			end
 
 			OPCODE_BRANCH: begin
-				alu_control      = ALU_ADD; 
+				alu_control      = ALU_SUB; 
 				alu_src_a_sel    = ALU_SRC_A_RS1;
 				alu_src_b_sel    = ALU_SRC_B_RS2;
-				imm_src         = IMM_B;
-				pc_src           = PC_SRC_BRANCH_JAL;
+				imm_src          = IMM_B;
+				
 				case (funct3)
 					FUNCT3_BEQ:  branch_taken = zero_flag;                    // rs1 == rs2
 					FUNCT3_BNE:  branch_taken = ~zero_flag;                   // rs1 != rs2
@@ -108,6 +108,7 @@ module control_unit
 					FUNCT3_BGEU: branch_taken = ~carry_flag;                  // rs1 >= rs2 (unsigned)
 					default:     branch_taken = 1'b0;
 				endcase
+				pc_src           = (branch_taken == 1) ? PC_SRC_BRANCH_JAL: PC_SRC_PC4;
 			end
 
 			OPCODE_LOAD: begin

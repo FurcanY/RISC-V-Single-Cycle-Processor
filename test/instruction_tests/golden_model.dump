@@ -1,0 +1,292 @@
+Address     Code        Basic                        Line Source
+
+0x00400000  0x10000e37  lui x28,0x00010000           10       lui x28, 0x10000        # 0x10000000
+0x00400004  0x300e0e13  addi x28,x28,0x00000300      11       addi x28, x28, 0x300    # 0x10000300
+0x00400008  0x10000f37  lui x30,0x00010000           15       lui x30, 0x10000        # 0x10000000
+0x0040000c  0x200f0f13  addi x30,x30,0x00000200      16       addi x30, x30, 0x200    # 0x10000200
+0x00400010  0xabcde0b7  lui x1,0x000abcde            26       lui x1, 0xABCDE
+0x00400014  0x001e2023  sw x1,0(x28)                 27       sw x1, 0(x28)       # Sonucu belleğe yaz
+0x00400018  0x004e0e13  addi x28,x28,4               28       addi x28, x28, 4    # Sonraki bellek adresine geç
+0x0040001c  0x12345097  auipc x1,0x00012345          35       auipc x1, 0x12345
+0x00400020  0x001e2023  sw x1,0(x28)                 36       sw x1, 0(x28)
+0x00400024  0x004e0e13  addi x28,x28,4               37       addi x28, x28, 4
+0x00400028  0x06400093  addi x1,x0,0x00000064        43       addi x1, x0, 100    # x1 = 100
+0x0040002c  0x03208113  addi x2,x1,0x00000032        44       addi x2, x1, 50     # x2 = 150
+0x00400030  0x002e2023  sw x2,0(x28)                 45       sw x2, 0(x28)
+0x00400034  0x004e0e13  addi x28,x28,4               46       addi x28, x28, 4
+0x00400038  0xff600093  addi x1,x0,0xfffffff6        48       addi x1, x0, -10    # x1 = -10
+0x0040003c  0xffb08113  addi x2,x1,0xfffffffb        49       addi x2, x1, -5     # x2 = -15
+0x00400040  0x002e2023  sw x2,0(x28)                 50       sw x2, 0(x28)
+0x00400044  0x004e0e13  addi x28,x28,4               51       addi x28, x28, 4
+0x00400048  0x7ff00093  addi x1,x0,0x000007ff        53       addi x1, x0, 2047   # x1 = 2047 (max pozitif 12-bit anlık değer)
+0x0040004c  0x001e2023  sw x1,0(x28)                 54       sw x1, 0(x28)
+0x00400050  0x004e0e13  addi x28,x28,4               55       addi x28, x28, 4
+0x00400054  0x80000093  addi x1,x0,0xfffff800        57       addi x1, x0, -2048  # x1 = -2048 (min negatif 12-bit anlık değer)
+0x00400058  0x001e2023  sw x1,0(x28)                 58       sw x1, 0(x28)
+0x0040005c  0x004e0e13  addi x28,x28,4               59       addi x28, x28, 4
+0x00400060  0x00a00093  addi x1,x0,10                62       addi x1, x0, 10
+0x00400064  0x0140a113  slti x2,x1,20                63       slti x2, x1, 20     # x2 = 1 (10 < 20)
+0x00400068  0x002e2023  sw x2,0(x28)                 64       sw x2, 0(x28)
+0x0040006c  0x004e0e13  addi x28,x28,4               65       addi x28, x28, 4
+0x00400070  0x00a0a113  slti x2,x1,10                67       slti x2, x1, 10     # x2 = 0 (10 < 10 değil)
+0x00400074  0x002e2023  sw x2,0(x28)                 68       sw x2, 0(x28)
+0x00400078  0x004e0e13  addi x28,x28,4               69       addi x28, x28, 4
+0x0040007c  0xffb00093  addi x1,x0,0xfffffffb        71       addi x1, x0, -5
+0x00400080  0xffe0a113  slti x2,x1,0xfffffffe        72       slti x2, x1, -2     # x2 = 1 (-5 < -2)
+0x00400084  0x002e2023  sw x2,0(x28)                 73       sw x2, 0(x28)
+0x00400088  0x004e0e13  addi x28,x28,4               74       addi x28, x28, 4
+0x0040008c  0x00a00093  addi x1,x0,10                77       addi x1, x0, 10
+0x00400090  0x0140b113  sltiu x2,x1,20               78       sltiu x2, x1, 20    # x2 = 1 (10U < 20U)
+0x00400094  0x002e2023  sw x2,0(x28)                 79       sw x2, 0(x28)
+0x00400098  0x004e0e13  addi x28,x28,4               80       addi x28, x28, 4
+0x0040009c  0x00a0b113  sltiu x2,x1,10               82       sltiu x2, x1, 10    # x2 = 0 (10U < 10U değil)
+0x004000a0  0x002e2023  sw x2,0(x28)                 83       sw x2, 0(x28)
+0x004000a4  0x004e0e13  addi x28,x28,4               84       addi x28, x28, 4
+0x004000a8  0xfff00093  addi x1,x0,0xffffffff        86       addi x1, x0, -1     # x1 = 0xFFFFFFFF (büyük bir pozitif işaretsiz sayı)
+0x004000ac  0x0000b113  sltiu x2,x1,0                87       sltiu x2, x1, 0     # x2 = 0 (0xFFFFFFFFU < 0U değil)
+0x004000b0  0x002e2023  sw x2,0(x28)                 88       sw x2, 0(x28)
+0x004000b4  0x004e0e13  addi x28,x28,4               89       addi x28, x28, 4
+0x004000b8  0x0aa00093  addi x1,x0,0x000000aa        92       addi x1, x0, 0xAA
+0x004000bc  0x0ff0c113  xori x2,x1,0x000000ff        93       xori x2, x1, 0xFF   # x2 = 0x55
+0x004000c0  0x002e2023  sw x2,0(x28)                 94       sw x2, 0(x28)
+0x004000c4  0x004e0e13  addi x28,x28,4               95       addi x28, x28, 4
+0x004000c8  0x00f00093  addi x1,x0,15                98       addi x1, x0, 0x0F
+0x004000cc  0x0f00e113  ori x2,x1,0x000000f0         99       ori x2, x1, 0xF0    # x2 = 0xFF
+0x004000d0  0x002e2023  sw x2,0(x28)                 100      sw x2, 0(x28)
+0x004000d4  0x004e0e13  addi x28,x28,4               101      addi x28, x28, 4
+0x004000d8  0x0af00093  addi x1,x0,0x000000af        104      addi x1, x0, 0xAF
+0x004000dc  0x0f00f113  andi x2,x1,0x000000f0        105      andi x2, x1, 0xF0   # x2 = 0xA0
+0x004000e0  0x002e2023  sw x2,0(x28)                 106      sw x2, 0(x28)
+0x004000e4  0x004e0e13  addi x28,x28,4               107      addi x28, x28, 4
+0x004000e8  0x00100093  addi x1,x0,1                 113      addi x1, x0, 0x1
+0x004000ec  0x01f09113  slli x2,x1,31                114      slli x2, x1, 31     # x2 = 0x80000000 (en anlamlı bit 1)
+0x004000f0  0x002e2023  sw x2,0(x28)                 115      sw x2, 0(x28)
+0x004000f4  0x004e0e13  addi x28,x28,4               116      addi x28, x28, 4
+0x004000f8  0x00009113  slli x2,x1,0                 118      slli x2, x1, 0      # x2 = x1 (0 bit kaydırma)
+0x004000fc  0x002e2023  sw x2,0(x28)                 119      sw x2, 0(x28)
+0x00400100  0x004e0e13  addi x28,x28,4               120      addi x28, x28, 4
+0x00400104  0x800000b7  lui x1,0x00080000            123      lui x1, 0x80000     # x1 = 0x80000000
+0x00400108  0x01f0d113  srli x2,x1,31                124      srli x2, x1, 31     # x2 = 0x00000001 (mantıksal sağa kaydırma)
+0x0040010c  0x002e2023  sw x2,0(x28)                 125      sw x2, 0(x28)
+0x00400110  0x004e0e13  addi x28,x28,4               126      addi x28, x28, 4
+0x00400114  0x0000d113  srli x2,x1,0                 128      srli x2, x1, 0      # x2 = x1
+0x00400118  0x002e2023  sw x2,0(x28)                 129      sw x2, 0(x28)
+0x0040011c  0x004e0e13  addi x28,x28,4               130      addi x28, x28, 4
+0x00400120  0x800000b7  lui x1,0x00080000            133      lui x1, 0x80000     # x1 = 0x80000000 (-2^31)
+0x00400124  0x41f0d113  srai x2,x1,31                134      srai x2, x1, 31     # x2 = 0xFFFFFFFF (-1) (aritmetik sağa kaydırma, işaret biti korunur)
+0x00400128  0x002e2023  sw x2,0(x28)                 135      sw x2, 0(x28)
+0x0040012c  0x004e0e13  addi x28,x28,4               136      addi x28, x28, 4
+0x00400130  0x00400093  addi x1,x0,4                 138      addi x1, x0, 0x4    # x1 = 4
+0x00400134  0x4010d113  srai x2,x1,1                 139      srai x2, x1, 1      # x2 = 2
+0x00400138  0x002e2023  sw x2,0(x28)                 140      sw x2, 0(x28)
+0x0040013c  0x004e0e13  addi x28,x28,4               141      addi x28, x28, 4
+0x00400140  0x06400093  addi x1,x0,0x00000064        146      addi x1, x0, 100
+0x00400144  0x03200113  addi x2,x0,0x00000032        147      addi x2, x0, 50
+0x00400148  0xfec00193  addi x3,x0,0xffffffec        148      addi x3, x0, -20
+0x0040014c  0x00208233  add x4,x1,x2                 151      add x4, x1, x2      # x4 = 100 + 50 = 150
+0x00400150  0x004e2023  sw x4,0(x28)                 152      sw x4, 0(x28)
+0x00400154  0x004e0e13  addi x28,x28,4               153      addi x28, x28, 4
+0x00400158  0x40208233  sub x4,x1,x2                 156      sub x4, x1, x2      # x4 = 100 - 50 = 50
+0x0040015c  0x004e2023  sw x4,0(x28)                 157      sw x4, 0(x28)
+0x00400160  0x004e0e13  addi x28,x28,4               158      addi x28, x28, 4
+0x00400164  0x40110233  sub x4,x2,x1                 160      sub x4, x2, x1      # x4 = 50 - 100 = -50
+0x00400168  0x004e2023  sw x4,0(x28)                 161      sw x4, 0(x28)
+0x0040016c  0x004e0e13  addi x28,x28,4               162      addi x28, x28, 4
+0x00400170  0x00f00093  addi x1,x0,15                165      addi x1, x0, 0xF
+0x00400174  0x00200113  addi x2,x0,2                 166      addi x2, x0, 2      # Kaydırma miktarı
+0x00400178  0x00209233  sll x4,x1,x2                 167      sll x4, x1, x2      # x4 = 0xF << 2 = 0x3C
+0x0040017c  0x004e2023  sw x4,0(x28)                 168      sw x4, 0(x28)
+0x00400180  0x004e0e13  addi x28,x28,4               169      addi x28, x28, 4
+0x00400184  0x00a00093  addi x1,x0,10                172      addi x1, x0, 10
+0x00400188  0x01400113  addi x2,x0,20                173      addi x2, x0, 20
+0x0040018c  0x0020a233  slt x4,x1,x2                 174      slt x4, x1, x2      # x4 = 1 (10 < 20)
+0x00400190  0x004e2023  sw x4,0(x28)                 175      sw x4, 0(x28)
+0x00400194  0x004e0e13  addi x28,x28,4               176      addi x28, x28, 4
+0x00400198  0xffb00093  addi x1,x0,0xfffffffb        178      addi x1, x0, -5
+0x0040019c  0xffe00113  addi x2,x0,0xfffffffe        179      addi x2, x0, -2
+0x004001a0  0x0020a233  slt x4,x1,x2                 180      slt x4, x1, x2      # x4 = 1 (-5 < -2)
+0x004001a4  0x004e2023  sw x4,0(x28)                 181      sw x4, 0(x28)
+0x004001a8  0x004e0e13  addi x28,x28,4               182      addi x28, x28, 4
+0x004001ac  0x00a00093  addi x1,x0,10                185      addi x1, x0, 10
+0x004001b0  0x01400113  addi x2,x0,20                186      addi x2, x0, 20
+0x004001b4  0x0020b233  sltu x4,x1,x2                187      sltu x4, x1, x2     # x4 = 1 (10U < 20U)
+0x004001b8  0x004e2023  sw x4,0(x28)                 188      sw x4, 0(x28)
+0x004001bc  0x004e0e13  addi x28,x28,4               189      addi x28, x28, 4
+0x004001c0  0xfff00093  addi x1,x0,0xffffffff        191      addi x1, x0, -1     # x1 = 0xFFFFFFFF
+0x004001c4  0x00000113  addi x2,x0,0                 192      addi x2, x0, 0      # x2 = 0
+0x004001c8  0x0020b233  sltu x4,x1,x2                193      sltu x4, x1, x2     # x4 = 0 (0xFFFFFFFFU < 0U değil)
+0x004001cc  0x004e2023  sw x4,0(x28)                 194      sw x4, 0(x28)
+0x004001d0  0x004e0e13  addi x28,x28,4               195      addi x28, x28, 4
+0x004001d4  0x0aa00093  addi x1,x0,0x000000aa        198      addi x1, x0, 0xAA
+0x004001d8  0x0ff00113  addi x2,x0,0x000000ff        199      addi x2, x0, 0xFF
+0x004001dc  0x0020c233  xor x4,x1,x2                 200      xor x4, x1, x2      # x4 = 0x55
+0x004001e0  0x004e2023  sw x4,0(x28)                 201      sw x4, 0(x28)
+0x004001e4  0x004e0e13  addi x28,x28,4               202      addi x28, x28, 4
+0x004001e8  0x800000b7  lui x1,0x00080000            205      lui x1, 0x80000     # x1 = 0x80000000
+0x004001ec  0x01f00113  addi x2,x0,31                206      addi x2, x0, 31     # Kaydırma miktarı
+0x004001f0  0x0020d233  srl x4,x1,x2                 207      srl x4, x1, x2      # x4 = 0x00000001
+0x004001f4  0x004e2023  sw x4,0(x28)                 208      sw x4, 0(x28)
+0x004001f8  0x004e0e13  addi x28,x28,4               209      addi x28, x28, 4
+0x004001fc  0x800000b7  lui x1,0x00080000            212      lui x1, 0x80000     # x1 = 0x80000000
+0x00400200  0x01f00113  addi x2,x0,31                213      addi x2, x0, 31     # Kaydırma miktarı
+0x00400204  0x4020d233  sra x4,x1,x2                 214      sra x4, x1, x2      # x4 = 0xFFFFFFFF (-1)
+0x00400208  0x004e2023  sw x4,0(x28)                 215      sw x4, 0(x28)
+0x0040020c  0x004e0e13  addi x28,x28,4               216      addi x28, x28, 4
+0x00400210  0x00f00093  addi x1,x0,15                219      addi x1, x0, 0x0F
+0x00400214  0x0f000113  addi x2,x0,0x000000f0        220      addi x2, x0, 0xF0
+0x00400218  0x0020e233  or x4,x1,x2                  221      or x4, x1, x2       # x4 = 0xFF
+0x0040021c  0x004e2023  sw x4,0(x28)                 222      sw x4, 0(x28)
+0x00400220  0x004e0e13  addi x28,x28,4               223      addi x28, x28, 4
+0x00400224  0x0af00093  addi x1,x0,0x000000af        226      addi x1, x0, 0xAF
+0x00400228  0x0f000113  addi x2,x0,0x000000f0        227      addi x2, x0, 0xF0
+0x0040022c  0x0020f233  and x4,x1,x2                 228      and x4, x1, x2      # x4 = 0xA0
+0x00400230  0x004e2023  sw x4,0(x28)                 229      sw x4, 0(x28)
+0x00400234  0x004e0e13  addi x28,x28,4               230      addi x28, x28, 4
+0x00400238  0x0ab00093  addi x1,x0,0x000000ab        237      addi x1, x0, 0xAB       # Saklanacak byte
+0x0040023c  0x001f0023  sb x1,0(x30)                 238      sb x1, 0(x30)           # Mem[0x10000200 + 0] = 0xAB
+0x00400240  0xfff00093  addi x1,x0,0xffffffff        239      addi x1, x0, -1         # 0xFF (işaretli -1 byte)
+0x00400244  0x001f00a3  sb x1,1(x30)                 240      sb x1, 1(x30)           # Mem[0x10000200 + 1] = 0xFF
+0x00400248  0x000f0103  lb x2,0(x30)                 243      lb x2, 0(x30)           # x2 = 0x000000AB (pozitif olduğu için)
+0x0040024c  0x002e2023  sw x2,0(x28)                 244      sw x2, 0(x28)
+0x00400250  0x004e0e13  addi x28,x28,4               245      addi x28, x28, 4
+0x00400254  0x001f0103  lb x2,1(x30)                 246      lb x2, 1(x30)           # x2 = 0xFFFFFFFF olmalı (-1)
+0x00400258  0x002e2023  sw x2,0(x28)                 247      sw x2, 0(x28)
+0x0040025c  0x004e0e13  addi x28,x28,4               248      addi x28, x28, 4
+0x00400260  0x000f4103  lbu x2,0(x30)                251      lbu x2, 0(x30)          # x2 = 0x000000AB
+0x00400264  0x002e2023  sw x2,0(x28)                 252      sw x2, 0(x28)
+0x00400268  0x004e0e13  addi x28,x28,4               253      addi x28, x28, 4
+0x0040026c  0x001f4103  lbu x2,1(x30)                254      lbu x2, 1(x30)          # x2 = 0x000000FF
+0x00400270  0x002e2023  sw x2,0(x28)                 255      sw x2, 0(x28)
+0x00400274  0x004e0e13  addi x28,x28,4               256      addi x28, x28, 4
+0x00400278  0x0ab00093  addi x1,x0,0x000000ab        259      addi x1, x0, 0xAB     # Saklanacak halfword
+0x0040027c  0x001f1123  sh x1,2(x30)                 260      sh x1, 2(x30)           # Mem[0x10000200 + 2] = 0xABCD
+0x00400280  0xfff00093  addi x1,x0,0xffffffff        261      addi x1, x0, -1         # 0xFFFF
+0x00400284  0x001f1223  sh x1,4(x30)                 262      sh x1, 4(x30)           # Mem[0x10000200 + 4] = 0xFFFF
+0x00400288  0x002f1103  lh x2,2(x30)                 265      lh x2, 2(x30)           # x2 = 0x0000ABCD
+0x0040028c  0x002e2023  sw x2,0(x28)                 266      sw x2, 0(x28)
+0x00400290  0x004e0e13  addi x28,x28,4               267      addi x28, x28, 4
+0x00400294  0x004f1103  lh x2,4(x30)                 268      lh x2, 4(x30)           # x2 = 0xFFFFFFFF (-1)
+0x00400298  0x002e2023  sw x2,0(x28)                 269      sw x2, 0(x28)
+0x0040029c  0x004e0e13  addi x28,x28,4               270      addi x28, x28, 4
+0x004002a0  0x002f5103  lhu x2,2(x30)                273      lhu x2, 2(x30)          # x2 = 0x0000ABCD
+0x004002a4  0x002e2023  sw x2,0(x28)                 274      sw x2, 0(x28)
+0x004002a8  0x004e0e13  addi x28,x28,4               275      addi x28, x28, 4
+0x004002ac  0x004f5103  lhu x2,4(x30)                276      lhu x2, 4(x30)          # x2 = 0x0000FFFF
+0x004002b0  0x002e2023  sw x2,0(x28)                 277      sw x2, 0(x28)
+0x004002b4  0x004e0e13  addi x28,x28,4               278      addi x28, x28, 4
+0x004002b8  0x12300093  addi x1,x0,0x00000123        281      addi x1, x0, 0x123       # Saklanacak word
+0x004002bc  0x001f2423  sw x1,8(x30)                 282      sw x1, 8(x30)           # Mem[0x10000200 + 8] = 0x12345678
+0x004002c0  0xfff00093  addi x1,x0,0xffffffff        283      addi x1, x0, -1         # 0xFFFFFFFF
+0x004002c4  0x001f2623  sw x1,12(x30)                284      sw x1, 12(x30)          # Mem[0x10000200 + 12] = 0xFFFFFFFF
+0x004002c8  0x008f2103  lw x2,8(x30)                 287      lw x2, 8(x30)           # x2 = 0x12345678
+0x004002cc  0x002e2023  sw x2,0(x28)                 288      sw x2, 0(x28)
+0x004002d0  0x004e0e13  addi x28,x28,4               289      addi x28, x28, 4
+0x004002d4  0x00cf2103  lw x2,12(x30)                290      lw x2, 12(x30)          # x2 = 0xFFFFFFFF
+0x004002d8  0x002e2023  sw x2,0(x28)                 291      sw x2, 0(x28)
+0x004002dc  0x004e0e13  addi x28,x28,4               292      addi x28, x28, 4
+0x004002e0  0x0aa00093  addi x1,x0,0x000000aa        295      addi x1, x0, 0xAA
+0x004002e4  0x001f20a3  sw x1,1(x30)                 296      sw x1, 1(x30)           # Hizasız SW: Mem[0x10000200+1]=DD, Mem[+2]=CC, Mem[+3]=BB, Mem[+4]=AA
+0x004002e8  0x001f2103  lw x2,1(x30)                 297      lw x2, 1(x30)           # Hizasız LW
+0x004002ec  0x002e2023  sw x2,0(x28)                 298      sw x2, 0(x28)           # x2'nin 0xAABBCCDD olması beklenir
+0x004002f0  0x004e0e13  addi x28,x28,4               299      addi x28, x28, 4
+0x004002f4  0x00000293  addi x5,x0,0                 305      addi x5, x0, 0          # Başlangıçta 0
+0x004002f8  0x188000ef  jal x1,0x00000188            306      jal x1, target_jal      # x1 = dönüş adresi (label_jal_continue), target_jal'a atla
+0x004002fc  0x005e2023  sw x5,0(x28)                 308      sw x5, 0(x28)           # x5'in 1 olması beklenir
+0x00400300  0x004e0e13  addi x28,x28,4               309      addi x28, x28, 4
+0x00400304  0x00000313  addi x6,x0,0                 312      addi x6, x0, 0          # Gösterge, başlangıçta 0
+0x00400308  0x00000217  auipc x4,0                   321      auipc x4, 0 # Bu satırın offset'i, target_jalr'a göre ayarlanmalı veya
+0x0040030c  0xffc10113  addi x2,x2,0xfffffffc        340      addi sp, sp, -4 # Stack'te yer aç
+0x00400310  0x00112023  sw x1,0(x2)                  341      sw x1, 0(sp)    # x1'i (muhtemelen JAL'den gelen ra) sakla
+0x00400314  0x00000313  addi x6,x0,0                 343      addi x6, x0, 0  # JALR göstergesi
+0x00400318  0x00c000e7  jalr x1,x0,12                361      jalr x1, x0, 12 # PC+12'ye atla, PC+4'ü x1'e yaz. (12 = 3 komut ileri)
+0x0040031c  0x00000013  addi x0,x0,0                 362      nop             # Atlanacak komut 1
+0x00400320  0x00000013  addi x0,x0,0                 363      nop             # Atlanacak komut 2
+0x00400324  0x00100313  addi x6,x0,1                 364      addi x6, x0, 1  # Buraya gelinmeli (JALR hedefi)
+0x00400328  0x006e2023  sw x6,0(x28)                 366      sw x6, 0(x28)
+0x0040032c  0x004e0e13  addi x28,x28,4               367      addi x28, x28, 4
+0x00400330  0x00012083  lw x1,0(x2)                  369      lw x1, 0(sp)    # x1'i restore et
+0x00400334  0x00410113  addi x2,x2,4                 370      addi sp, sp, 4  # Stack'i düzelt
+0x00400338  0x00a00093  addi x1,x0,10                375      addi x1, x0, 10
+0x0040033c  0x00a00113  addi x2,x0,10                376      addi x2, x0, 10
+0x00400340  0x01400193  addi x3,x0,20                377      addi x3, x0, 20
+0x00400344  0x00000213  addi x4,x0,0                 380      addi x4, x0, 0          # Sonuç göstergesi (1 = atladı, 0 = atlamadı)
+0x00400348  0x00208463  beq x1,x2,0x00000008         381      beq x1, x2, target_beq_taken
+0x0040034c  0x0080006f  jal x0,0x00000008            382      j target_beq_continue
+0x00400350  0x00100213  addi x4,x0,1                 384      addi x4, x0, 1
+0x00400354  0x004e2023  sw x4,0(x28)                 386      sw x4, 0(x28)
+0x00400358  0x004e0e13  addi x28,x28,4               387      addi x28, x28, 4
+0x0040035c  0x00100213  addi x4,x0,1                 389      addi x4, x0, 1          # Sonuç göstergesi (1 = atladı, 0 = atlamadı)
+0x00400360  0x00308463  beq x1,x3,0x00000008         390      beq x1, x3, target_beq_fail # Atlamamalı
+0x00400364  0x00000213  addi x4,x0,0                 391      addi x4, x0, 0          # Doğru, atlamadı
+0x00400368  0x004e2023  sw x4,0(x28)                 393      sw x4, 0(x28)
+0x0040036c  0x004e0e13  addi x28,x28,4               394      addi x28, x28, 4
+0x00400370  0x00000213  addi x4,x0,0                 397      addi x4, x0, 0          # Sonuç göstergesi
+0x00400374  0x00309463  bne x1,x3,0x00000008         398      bne x1, x3, target_bne_taken
+0x00400378  0x0080006f  jal x0,0x00000008            399      j target_bne_continue
+0x0040037c  0x00100213  addi x4,x0,1                 401      addi x4, x0, 1
+0x00400380  0x004e2023  sw x4,0(x28)                 403      sw x4, 0(x28)
+0x00400384  0x004e0e13  addi x28,x28,4               404      addi x28, x28, 4
+0x00400388  0x00100213  addi x4,x0,1                 406      addi x4, x0, 1          # Sonuç göstergesi
+0x0040038c  0x00209463  bne x1,x2,0x00000008         407      bne x1, x2, target_bne_fail # Atlamamalı
+0x00400390  0x00000213  addi x4,x0,0                 408      addi x4, x0, 0          # Doğru, atlamadı
+0x00400394  0x004e2023  sw x4,0(x28)                 410      sw x4, 0(x28)
+0x00400398  0x004e0e13  addi x28,x28,4               411      addi x28, x28, 4
+0x0040039c  0xffb00093  addi x1,x0,0xfffffffb        414      addi x1, x0, -5
+0x004003a0  0x00500113  addi x2,x0,5                 415      addi x2, x0, 5
+0x004003a4  0x00000213  addi x4,x0,0                 416      addi x4, x0, 0          # Sonuç göstergesi
+0x004003a8  0x0020c463  blt x1,x2,0x00000008         417      blt x1, x2, target_blt_taken # -5 < 5, atlamalı
+0x004003ac  0x0080006f  jal x0,0x00000008            418      j target_blt_continue
+0x004003b0  0x00100213  addi x4,x0,1                 420      addi x4, x0, 1
+0x004003b4  0x004e2023  sw x4,0(x28)                 422      sw x4, 0(x28)
+0x004003b8  0x004e0e13  addi x28,x28,4               423      addi x28, x28, 4
+0x004003bc  0x00100213  addi x4,x0,1                 425      addi x4, x0, 1          # Sonuç göstergesi
+0x004003c0  0x00114463  blt x2,x1,0x00000008         426      blt x2, x1, target_blt_fail # 5 < -5 değil, atlamamalı
+0x004003c4  0x00000213  addi x4,x0,0                 427      addi x4, x0, 0
+0x004003c8  0x004e2023  sw x4,0(x28)                 429      sw x4, 0(x28)
+0x004003cc  0x004e0e13  addi x28,x28,4               430      addi x28, x28, 4
+0x004003d0  0x00500093  addi x1,x0,5                 433      addi x1, x0, 5
+0x004003d4  0xffb00113  addi x2,x0,0xfffffffb        434      addi x2, x0, -5
+0x004003d8  0x00000213  addi x4,x0,0                 435      addi x4, x0, 0          # Sonuç göstergesi
+0x004003dc  0x0020d463  bge x1,x2,0x00000008         436      bge x1, x2, target_bge_taken # 5 >= -5, atlamalı
+0x004003e0  0x0080006f  jal x0,0x00000008            437      j target_bge_continue
+0x004003e4  0x00100213  addi x4,x0,1                 439      addi x4, x0, 1
+0x004003e8  0x004e2023  sw x4,0(x28)                 441      sw x4, 0(x28)
+0x004003ec  0x004e0e13  addi x28,x28,4               442      addi x28, x28, 4
+0x004003f0  0x00100213  addi x4,x0,1                 444      addi x4, x0, 1          # Sonuç göstergesi
+0x004003f4  0x00115463  bge x2,x1,0x00000008         445      bge x2, x1, target_bge_fail # -5 >= 5 değil, atlamamalı
+0x004003f8  0x00000213  addi x4,x0,0                 446      addi x4, x0, 0
+0x004003fc  0x004e2023  sw x4,0(x28)                 448      sw x4, 0(x28)
+0x00400400  0x004e0e13  addi x28,x28,4               449      addi x28, x28, 4
+0x00400404  0x00a00093  addi x1,x0,10                452      addi x1, x0, 10         # x1 = 10
+0x00400408  0x01400113  addi x2,x0,20                453      addi x2, x0, 20         # x2 = 20
+0x0040040c  0x00000213  addi x4,x0,0                 454      addi x4, x0, 0          # Sonuç göstergesi
+0x00400410  0x0020e463  bltu x1,x2,0x00000008        455      bltu x1, x2, target_bltu_taken # 10U < 20U, atlamalı
+0x00400414  0x0080006f  jal x0,0x00000008            456      j target_bltu_continue
+0x00400418  0x00100213  addi x4,x0,1                 458      addi x4, x0, 1
+0x0040041c  0x004e2023  sw x4,0(x28)                 460      sw x4, 0(x28)
+0x00400420  0x004e0e13  addi x28,x28,4               461      addi x28, x28, 4
+0x00400424  0xfff00093  addi x1,x0,0xffffffff        463      addi x1, x0, -1         # x1 = 0xFFFFFFFF (büyük pozitif işaretsiz)
+0x00400428  0x00000113  addi x2,x0,0                 464      addi x2, x0, 0          # x2 = 0
+0x0040042c  0x00100213  addi x4,x0,1                 465      addi x4, x0, 1          # Sonuç göstergesi
+0x00400430  0x0020e463  bltu x1,x2,0x00000008        466      bltu x1, x2, target_bltu_fail # 0xFFFFFFFFU < 0U değil, atlamamalı
+0x00400434  0x00000213  addi x4,x0,0                 467      addi x4, x0, 0
+0x00400438  0x004e2023  sw x4,0(x28)                 469      sw x4, 0(x28)
+0x0040043c  0x004e0e13  addi x28,x28,4               470      addi x28, x28, 4
+0x00400440  0x01400093  addi x1,x0,20                473      addi x1, x0, 20
+0x00400444  0x00a00113  addi x2,x0,10                474      addi x2, x0, 10
+0x00400448  0x00000213  addi x4,x0,0                 475      addi x4, x0, 0          # Sonuç göstergesi
+0x0040044c  0x0020f463  bgeu x1,x2,0x00000008        476      bgeu x1, x2, target_bgeu_taken # 20U >= 10U, atlamalı
+0x00400450  0x0080006f  jal x0,0x00000008            477      j target_bgeu_continue
+0x00400454  0x00100213  addi x4,x0,1                 479      addi x4, x0, 1
+0x00400458  0x004e2023  sw x4,0(x28)                 481      sw x4, 0(x28)
+0x0040045c  0x004e0e13  addi x28,x28,4               482      addi x28, x28, 4
+0x00400460  0x00000093  addi x1,x0,0                 484      addi x1, x0, 0          # x1 = 0
+0x00400464  0xfff00113  addi x2,x0,0xffffffff        485      addi x2, x0, -1         # x2 = 0xFFFFFFFF (büyük pozitif işaretsiz)
+0x00400468  0x00100213  addi x4,x0,1                 486      addi x4, x0, 1          # Sonuç göstergesi
+0x0040046c  0x0020f463  bgeu x1,x2,0x00000008        487      bgeu x1, x2, target_bgeu_fail # 0U >= 0xFFFFFFFFU değil, atlamamalı
+0x00400470  0x00000213  addi x4,x0,0                 488      addi x4, x0, 0
+0x00400474  0x004e2023  sw x4,0(x28)                 490      sw x4, 0(x28)
+0x00400478  0x004e0e13  addi x28,x28,4               491      addi x28, x28, 4
+0x0040047c  0x0000006f  jal x0,0x00000000            497      j end_program
+0x00400480  0x00100293  addi x5,x0,1                 503      addi x5, x0, 1          # JAL hedefi ulaşıldı
+0x00400484  0x00008067  jalr x0,x1,0                 504      jalr x0, x1, 0          # Geri dön (x1'deki adrese)
