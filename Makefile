@@ -7,7 +7,7 @@ ALL_FILES := ${SV_FILES} ${ALL_TB}
 # ========================
 # Varsayılan Testbench (TB= ile override edilebilir)
 # ========================
-TB        ?= alu_tb
+TB        ?= core_model_tb
 TOP       := $(TB)
 TB_FILE   := ./tb/$(TB).sv
 

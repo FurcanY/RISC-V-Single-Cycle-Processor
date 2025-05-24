@@ -68,9 +68,15 @@ RV32I, RISC-V mimarisinin temel 32-bit integer instruction set'idir. Aşağıdak
 |**control_unit**|her bir modülün çalışması için sinyal oluşturan birim|
 |**core_model**|bütün modüllerin birleştiği, tek vuruşluk işlemci|
 
+---
+
+### Testbench çalıştırma
+
+Makefile içerisindeki `TB        ?= core_model_tb` içeriğini kullanacağınız testbench dosyasının adı ile değiştiriniz, daha sonra `make run` kodunu terminale yazınız.
+
+ya da terminale direkt `make run TB=<testbenc_dosyasi_adi>` yazabilirsiniz.
 
 
-
-
+---
 
 **verilator --version:** Verilator 5.016 2023-09-16 rev v5.014-149-g57c816f90
