@@ -1,5 +1,7 @@
 # RISC-V RV32I Single-Cycle Processor Tasarımı
 
+## bu tasarım hatalı ( daha sonra bakılmalı )
+
 Bu proje, RISC-V RV32I Base Instruction Set kullanılarak tasarlanmış single-cycle bir processor implementasyonunu içermektedir.
 
 ## RV32I Base Instruction Set
@@ -52,10 +54,6 @@ RV32I, RISC-V mimarisinin temel 32-bit integer instruction set'idir. Aşağıdak
 ### 6. J-type Instructions (Jump)
 - `jal rd, offset`: Jump and link
 - `jalr rd, offset(rs1)`: Jump and link register
----
-
-
-
 ---
 
 **verilator --version:** Verilator 5.032 2025-01-01 rev (Debian 5.032-1+b2)
