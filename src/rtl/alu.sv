@@ -1,109 +1,90 @@
 /*
-    --- Aritmetik Mantık Birimi (ALU) ---
-    ALU, RISC-V RV32I işlemcisinin temel aritmetik ve mantık işlemlerini gerçekleştirir.
+   --- OBSIDYEN RISC-V CORE ---
+
+    Module : Arithmetic Logic Unit (modülü
+    Author : Furkan YILDIRIM
+
+    Note:
+        - ALU işlemleri: ADD,SUB,SLL,SLT,SLTU,XOR,SRL,SRA,OR,AND
+        - I işlemleri ALU dışında handledilir
+        - Zero flag çıkışı branch birimi için kullanılır.
     
-    Desteklenen İşlemler:
-    1. Aritmetik İşlemler
-        - ADD  : İki sayının toplanması (add, addi)
-        - SUB  : İki sayının çıkarılması (sub) 
-        - SLT  : İşaretli karşılaştırma (slt, slti)     -> rd = (rs1 <0)
-        - SLTU : İşaretsiz karşılaştırma (sltu, sltiu)  -> rd = (rs1 ≠0)
-        
-    2. Mantık İşlemleri
-        - AND  : Bit düzeyinde VE işlemi   (and, andi)
-        - OR   : Bit düzeyinde VEYA işlemi (or, ori) 
-        - XOR  : Bit düzeyinde XOR işlemi  (xor, xori)
-        
-    3. Kaydırma İşlemleri
-        - SLL  : Mantıksal sola kaydırma (sll, slli)
-        - SRL  : Mantıksal sağa kaydırma (srl, srli) 
-        - SRA  : Aritmetik sağa kaydırma (sra, srai) 
-        
-    Bayraklar:
-    - zero_flag    : Sonuç sıfır ise 1 (beq, bne için)
-    - negative_flag: Sonuç negatif ise 1 (blt, bge için)
-    - carry_flag   : İşaretsiz taşma durumu (bltu, bgeu için)
-    - overflow_flag: İşaretli taşma durumu:
-        işaretli taşma -> 
-            -iki negatif sayıyı topladın pozitif çıktı
-            -iki pozitif sayıyı topladın negatif çıktı
 */
+
+
 
 module alu 
     import riscv_pkg::*;
 (
-    input  logic [XLEN-1:0] source_a,
-    input  logic [XLEN-1:0] source_b,
-    input  alu_op_e         alu_control,
-    
-    output logic [XLEN-1:0] alu_result,
-    output logic            zero_flag,
-    output logic            negative_flag,
-    output logic            carry_flag,
-    output logic            overflow_flag
+    input  alu_operation_e      alu_op_i,   // Kontrol sinyali
+    input  logic [XLEN-1:0]     op_a_i,
+    input  logic [XLEN-1:0]     op_b_i,
+    output logic [XLEN-1:0]     result_o,
+    output logic                zero_o       // Branch için
 );
 
-    logic [XLEN:0] temp_result;
-    logic [4:0] shamt;  // Shift amount for I-type shift operations
+    logic [31:0]                adder_result;
+    logic                       adder_cout;         // carry out
+    logic [31:0]                operand_b_mux;      // Sub işlemine göre B'nin complementi
+    logic                       adder_cin;         // carry in
+    logic                       is_sub;           // çıkarma işlemi mi?
 
-    // For I-type shift operations, only use lower 5 bits
-    assign shamt = source_b[4:0];
+
+
+
+    
+    // Çıkarma veya Karşılaştırma yapıyorsak B'nin tersini alacağız (2's complement)
+    assign is_sub = (alu_op_i == ALU_SUB || alu_op_i == ALU_SLT || alu_op_i == ALU_SLTU);
+
+    assign operand_b_mux = is_sub ? ~op_b_i : op_b_i;
+    assign adder_cin     = is_sub ? 1'b1    : 1'b0;
+
+    // Tek bir Adder bloğu
+    assign {adder_cout, adder_result} = {1'b0, op_a_i} + {1'b0, operand_b_mux} + {{32{1'b0}}, adder_cin};
+
+
+    // 2. Karşılaştırma Mantığı (SLT, SLTU)
+    logic slt_result;
+    logic sltu_result;
+
+    // İşaretsiz karşılaştırma (Carry out)
+    assign sltu_result = !adder_cout; 
+    
+    // İşaretli karşılaştırma (XOR mantığı: Overflow varsa işaret ters döner)
+    // A < B (signed) mantığı: (A[31] != B[31]) ? A[31] : (A-B)[31]
+    assign slt_result = (op_a_i[31] ^ op_b_i[31]) ? op_a_i[31] : adder_result[31];
+
 
     always_comb begin
-        temp_result     = 0;
-        alu_result      = 0;
-        zero_flag       = 0;
-        negative_flag   = 0;
-        carry_flag      = 0;
-        overflow_flag   = 0;
+        result_o = '0; // Default
+        
+        case (alu_op_i)
+            // Aritmetik
+            ALU_ADD, ALU_SUB: result_o = adder_result;
+            
+            // Karşılaştırma
+            ALU_SLT:          result_o = {31'b0, slt_result};
+            ALU_SLTU:         result_o = {31'b0, sltu_result};
 
-        case (alu_control)
-            ALU_ADD: begin
-                temp_result    = source_a + source_b;
-                alu_result     = temp_result[XLEN-1:0];
-                carry_flag     = temp_result[XLEN];
-                overflow_flag  = (source_a[XLEN-1] == source_b[XLEN-1]) &&
-                                 (alu_result[XLEN-1] != source_a[XLEN-1]);
-            end
+            // Mantıksal
+            ALU_AND:          result_o = op_a_i & op_b_i;
+            ALU_OR:           result_o = op_a_i | op_b_i;
+            ALU_XOR:          result_o = op_a_i ^ op_b_i;
 
-            ALU_SUB: begin
-                temp_result    = source_a - source_b;
-                alu_result     = temp_result[XLEN-1:0];
-                carry_flag     = (source_a < source_b);
-                overflow_flag  = (source_a[XLEN-1] != source_b[XLEN-1]) &&
-                                (alu_result[XLEN-1] != source_a[XLEN-1]);
-            end
+            // Kaydırma ( Shift )
+            // Not: SystemVerilog >>> operatörü signed ise aritmetik kaydırır.
+            ALU_SLL:          result_o = op_a_i << op_b_i[4:0];
+            ALU_SRL:          result_o = op_a_i >> op_b_i[4:0];
+            ALU_SRA:          result_o = $signed(op_a_i) >>> op_b_i[4:0];
 
-            ALU_AND:  alu_result = source_a & source_b;
-            ALU_OR:   alu_result = source_a | source_b;
-            ALU_XOR:  alu_result = source_a ^ source_b;
-            ALU_SLL:  alu_result = source_a << shamt;  // Use 5-bit shamt
-            ALU_SRL:  alu_result = source_a >> shamt;  // Use 5-bit shamt
-            ALU_SRA:  alu_result = $signed(source_a) >>> shamt;  // Use 5-bit shamt
-            ALU_SLT:  alu_result = ($signed(source_a) < $signed(source_b)) ? 32'd1 : 32'd0;
-            ALU_SLTU: alu_result = (source_a < source_b) ? 32'd1 : 32'd0;
-
-            // LUI: Load Upper Immediate
-            ALU_LUI: begin
-                alu_result = source_b;  // source_b contains the immediate value
-            end
-
-            // AUIPC: Add Upper Immediate to PC
-            ALU_AUIPC: begin
-                alu_result = source_a + source_b;  // source_a is PC, source_b is immediate
-            end
-
-            default: begin
-                alu_result = 32'd0;
-                zero_flag = 0;
-                negative_flag = 0;
-                carry_flag = 0;
-                overflow_flag = 0;
-            end
+            // RV32B Geldiğinde buraya yeni case'ler eklenir
+            // ALU_ROL: ...
+            
+            default:          result_o = '0;
         endcase
-
-        zero_flag     = (alu_result == 0);
-        negative_flag = alu_result[XLEN-1];
     end
+
+    // Zero Flag (Branch Unit için)
+    assign zero_o = (result_o == 32'b0);
 
 endmodule

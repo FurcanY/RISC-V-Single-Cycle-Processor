@@ -1,26 +1,40 @@
+/*
+   --- OBSIDYEN RISC-V CORE ---
+
+    Module : Instruction memory modülü
+    Author : Furkan YILDIRIM
+
+    Note: 
+        - şu anlık sadece register ile beraber instruction fetch işlemi yapıyor
+    
+*/
+
+
+
+// kombinasyonel olarak address girdisinden sonra pdelay zaman sonra data çıktısı alınır
 module instruction_memory
     import riscv_pkg::*;
 (
-    input  logic [XLEN-1:0]   pc_in,            // instruction memory'e girilen pc değeri
-    output logic [XLEN-1:0]   instruction       // dışarı verilen instruction
+    input logic [XLEN-1:0] addr_i,
+    output logic [XLEN-1:0] instr_o
 );
 
-    logic [XLEN-1:0] instruction_mem [MEM_SIZE-1:0];       // Word-addressable memory
+localparam INSTR_ADDR = 2048;
 
-    initial begin
-        $readmemh("./test/instruction_tests/golden_model.hex", instruction_mem);  // Test programını yükle
-    end
+logic  [XLEN-1:0] instr_mem [INSTR_ADDR-1:0] ; // instruction memory - word adreslenebilir
 
-    assign instruction = instruction_mem[pc_in[$clog2(MEM_SIZE*4)-1:2]];  // 1024 = 2^10 -> 10 bitlik bu adresin 2 sağ shift edilmiş hali alınmalıdır.
+
+// test icin basit bir program yukleme
+initial begin
+    $readmemh("./memory/data_mem_non_algm_test.hex", instr_mem);
+end
+
+
+
+// kombinasyonel islemler
+always_comb begin
+    instr_o = instr_mem[addr_i[$clog2(INSTR_ADDR*4)-1:2]]; // word aligned adresleme
+end
+
 
 endmodule
-
-
-/*
-
-==============================================================
-TESTBENCH çağırılırken, gerekli olan instruction eklenmeli
-$readmemh("./test/test_1.hex", instruction_mem);  
-==============================================================
-
-*/

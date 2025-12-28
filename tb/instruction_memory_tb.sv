@@ -1,50 +1,70 @@
-module instruction_memory_tb;
+/*
+OBSIDYEN RISC-V CORE
+
+instruction memory testbench modülü
+
+
+*/
+
+
+module instruction_memory_tb 
     import riscv_pkg::*;
+();
 
-    logic [XLEN-1:0]   pc_in;       
-    logic [XLEN-1:0]   instruction;
+logic [XLEN-1:0] addr_i;
+logic [XLEN-1:0] instr_o;
 
-    instruction_memory dut(
-        .pc_in       (pc_in),            
-        .instruction (instruction)           
-    );
+instruction_memory dut (
+    .addr_i(addr_i),
+    .instr_o(instr_o)
+);
 
-    integer file, read, line = 0, error_count = 0;
-    logic [XLEN-1:0] expected_instruction;
 
-    initial begin 
-        pc_in = 0;
+// okuma testi
 
-        file = $fopen("./test/test_1.hex","r");
-        if (file == 0) begin
-            $fatal("Dosya açılamadı!");
-        end
-        #5;
+initial begin
 
-        while (1) begin
-            read = $fscanf(file, "%h", expected_instruction);
-            if (read != 1) break; // dosya bitti ya da hatalı satır
-            #5;
-            isTrue(expected_instruction, instruction, line);
-            line++;
-            pc_in += 4; //word okuma yapıldığı için 4 eklenir.
-            #1;
-        end
-
-        if (error_count == 0) begin
-            $display(" Hata yok, tüm okumalar doğru!");
-        end else begin
-            $display(" Hata sayısı = %0d", error_count);
-        end
-        $finish;
+    int i = 0;
+    for (i = 0; i < 110; i++) begin
+        addr_i = i * 4;
+        #5ns;
+        $display("addr_i: %d, instr_o: %h", addr_i/4, instr_o);
     end
 
-    task isTrue(input logic [XLEN-1:0] exp_instr, instr, input int line_no);
-        if (exp_instr !== instr) begin
-            $display(" Hatalı okuma! Satır = %0d", line_no);
-            $display("  Beklenen = %0h, Oluşan = %0h", exp_instr, instr);
-            error_count++;
-        end
-    endtask
+    addr_i = 32'h0000_0000;
+    #5ns;
+    assert (instr_o == 32'h00a00093 ) 
+    else 
+        $error("Hata: addr_i = %h için beklenen instr_o = %h, alınan instr_o = %h", addr_i, 32'h00a00093, instr_o);
+    $display("1. satirdaki okuma dogru");
+
+
+    addr_i = 32'h0000_0004;
+    #5ns;
+    assert (instr_o == 32'h00500113 ) 
+    else 
+        $error("Hata: addr_i = %h için beklenen instr_o = %h, alınan instr_o = %h", addr_i, 32'h00500113, instr_o);
+    $display("2. satirdaki okuma dogru");
+
+
+    addr_i = 32'h0000_01b4;
+    #5ns;
+    assert (instr_o == 32'h0000_0069)
+    else 
+        $error("Hata: addr_i = %h için beklenen instr_o = %h, alınan instr_o = %h", addr_i, 32'h0000_0069, instr_o);
+    $display("110. satirdaki  okuma dogru");
+
+
+    addr_i = 32'h0000_009c;
+    #5ns;
+    assert (instr_o == 32'h6789ae17)
+    else
+        $error("Hata: addr_i = %h için beklenen instr_o = %h, alınan instr_o = %h", addr_i, 32'h0000_009c, instr_o);
+    $display("40. satırdaki okuma dogru");
+
+    $display("test tamamlandi");
+    $finish;
+end
+
 
 endmodule

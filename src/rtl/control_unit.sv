@@ -1,187 +1,360 @@
-module control_unit
-	import riscv_pkg::*;
+/*
+   --- OBSIDYEN RISC-V CORE ---
+
+    Module : Control Unit
+    Author : Furkan YILDIRIM
+
+    Note:
+        -instruction bilgisini alır ve gerekli kontrol sinyallerini üretir.
+
+        mem_sign_ext_o : load işlemlerinde işaret genişletme için kullanılır.
+        mem_size_o     : memory erişim boyutunu belirtir (byte, half-word, word).
+        mem_write_en_o : data memory'ye yazma işlemi için enable sinyali.
+
+        imm_source_o   : immediate extend unit için kontrol sinyali.
+
+        reg_write_en_o : register file'a yazma işlemi için enable sinyali.
+        wb_sel_o       : write-back veri kaynağını seçer (ALU sonucu, memory verisi, PC+4).
+
+        alu_op_o       : ALU işlemi için kontrol sinyali.
+
+        is_branch_o    : branch işlemi için sinyal.
+        next_pc_sel_o  : sonraki PC adresi seçimi (normal, jump, branch).
+
+        op_a_source_o  : ALU'nin birinci operand kaynağını belirler (register veya pc).
+        op_b_source_o  : ALU'nin ikinci operand kaynağını belirler (register veya immediate).
+        
+    ŞU AN İÇİN SADECE RV32I İÇİN KONTROL SİNYALLERİ ÜRETİLİYOR. 14.12.25
+*/
+
+module control_unit 
+    import riscv_pkg::*;
 (
-	input  logic [6:0] opcode           ,
-	input  logic [2:0] funct3           ,
-	input  logic [6:0] funct7           ,
-    input  logic        zero_flag       , 
-    input  logic        negative_flag   , 
-    input  logic        carry_flag      , 
-    input  logic        overflow_flag   , 
+    input logic [XLEN-1:0] instruction_i, 
 
-	// ALU kontrol sinyalleri
-	output alu_op_e    alu_control      ,
-	output alu_src_a_e alu_src_a_sel    , // 00=register / 01=program counter / 10=sıfır 
-	output alu_src_b_e alu_src_b_sel    , // 0=register seçimi / 1=immediate seçimi
+    output logic                mem_sign_ext_o,          
+    output logic [1:0]          mem_size_o,
+    output logic                mem_write_en_o,
+    output logic                mem_read_en_o,   // Load işlemleri için okuma sinyali
 
-	
+    output immediate_type_e     imm_source_o, 
 
-	// Register dosyası kontrol sinyalleri
-	output logic        reg_write_enable,
+    output logic                reg_write_en_o,
+    output writeback_select_e   wb_sel_o,        // Geri yazma verisi seçimi
 
-	// Bellek kontrol sinyalleri
-	output logic        mem_read        ,
-	output logic 		mem_write       ,
-	output mem_size_e	mem_size        ,    // 00: byte, 01: yarım kelime, 10: kelime
-	output logic        mem_usign_load  ,    // 1: işaretsiz yükleme, 0: işaretli yükleme
+    output alu_operation_e      alu_op_o,    
 
-	// Immediate kontrol sinyali
-	output immediate_type_e imm_src    ,
+    output logic                is_branch_o,             
+    output next_pc_select_e     next_pc_sel_o,   // PC kaynak seçimi (JAL/JALR/Branch yönetimi)
 
-	// Program sayacı kontrol sinyali
-	output pc_src_e 	pc_src          ,
-
-	// Sonuç kaynağı kontrol sinyali
-	output result_src_e result_src      
+    output op_a_source_e        op_a_source_o,
+    output op_b_source_e        op_b_source_o
 );
 
-	// Branch kontrol sinyalleri
-	logic        branch_taken    ; // Branch'in alınıp alınmadığını gösteren sinyal
+// instruction alanlarından gerekli bilgileri çıkar
+instruction_t decoded_instr;
+
+// cast edilmiş instruction
+assign decoded_instr = instruction_t'(instruction_i);
+
+always_comb begin : control_unit_logic
+    // Varsayılan değerler
+    mem_sign_ext_o    = 1'b0;
+    mem_size_o        = 2'b00;
+    mem_write_en_o    = 1'b0;
+    mem_read_en_o     = 1'b0;
+
+    imm_source_o      = IMM_NONE;
+
+    reg_write_en_o    = 1'b0;
+    wb_sel_o          = WB_ALU;      // Varsayılan ALU sonucu
+
+    alu_op_o          = ALU_ADD;
+
+    is_branch_o       = 1'b0;
+    next_pc_sel_o     = NEXT_PC_4;   // Varsayılan PC+4
+
+    op_a_source_o     = ALU_SRC_RD1;
+    op_b_source_o     = ALU_SRC_RD2;
 
 
+    case (decoded_instr.itype.opcode)
 
-	// Opcode decoder
-	always_comb begin
+        OpcodeOp: begin : rv32i_r_type_instructions
+            // R-type işlemler
+            reg_write_en_o = 1'b1; // R-type işlemler register'a yazar
+            // wb_sel_o zaten WB_ALU
 
-		//varsayılan değerler
-		alu_control      = ALU_ADD;
-		alu_src_a_sel    = ALU_SRC_A_RS1;
-		alu_src_b_sel    = ALU_SRC_B_RS2;
-		branch_taken     = 1'b0;
-		reg_write_enable = 1'b0;
-		mem_read         = 1'b0;
-		mem_write        = 1'b0;
-		mem_size         = MEM_WORD;
-		mem_usign_load   = 1'b0;
-		imm_src          = IMM_I;
-		pc_src           = PC_SRC_PC4;
-		result_src       = RESULT_SRC_ALU;
 
-		case (opcode)
-			OPCODE_LUI: begin
-				reg_write_enable = 1;
-				alu_src_a_sel 	 = ALU_SRC_A_ZERO;
-				alu_src_b_sel    = ALU_SRC_B_IMM;
-				imm_src         = IMM_U;
-				result_src       = RESULT_SRC_ALU;
-			end
+            // funct3 bakılır, daha sonra funct7 ile ayrım yapılır
+            case (decoded_instr.rtype.funct3)
 
-			OPCODE_AUIPC: begin
-				alu_control      = ALU_AUIPC;
-				alu_src_a_sel    = ALU_SRC_A_PC;
-				alu_src_b_sel    = ALU_SRC_B_IMM;
-				reg_write_enable = 1'b1;
-				imm_src         = IMM_U;
-				result_src       = RESULT_SRC_ALU;
-			end
+                F3_ADD_SUB  : begin
+                    if (decoded_instr.rtype.funct7 == F7_SUB) begin
+                        alu_op_o = ALU_SUB;
+                    end else begin
+                        alu_op_o = ALU_ADD;
+                    end
+                end
 
-			OPCODE_JAL: begin
-				alu_src_a_sel    = ALU_SRC_A_PC;
-				alu_src_b_sel    = ALU_SRC_B_IMM;
-				reg_write_enable = 1'b1;
-				imm_src         = IMM_J;
-				pc_src           = PC_SRC_BRANCH_JAL;
-				result_src       = RESULT_SRC_PC4;
-			end
+                F3_SLL      :begin 
+                    alu_op_o = ALU_SLL ;
+                end
 
-			OPCODE_JALR: begin
-				alu_src_a_sel    = ALU_SRC_A_RS1;
-				alu_src_b_sel    = ALU_SRC_B_IMM;
-				reg_write_enable = 1'b1;
-				imm_src         = IMM_I;
-				pc_src           = PC_SRC_JALR;
-				result_src       = RESULT_SRC_PC4;
-			end
+                F3_SLT      :begin 
+                    alu_op_o = ALU_SLT ;
+                end
 
-			OPCODE_BRANCH: begin
-				alu_control      = ALU_SUB; 
-				alu_src_a_sel    = ALU_SRC_A_RS1;
-				alu_src_b_sel    = ALU_SRC_B_RS2;
-				imm_src          = IMM_B;
-				
-				case (funct3)
-					FUNCT3_BEQ:  branch_taken = zero_flag;                    // rs1 == rs2
-					FUNCT3_BNE:  branch_taken = ~zero_flag;                   // rs1 != rs2
-					FUNCT3_BLT:  branch_taken = negative_flag ^ overflow_flag; // rs1 < rs2 (signed)
-					FUNCT3_BGE:  branch_taken = ~(negative_flag ^ overflow_flag); // rs1 >= rs2 (signed)
-					FUNCT3_BLTU: branch_taken = carry_flag;                   // rs1 < rs2 (unsigned)
-					FUNCT3_BGEU: branch_taken = ~carry_flag;                  // rs1 >= rs2 (unsigned)
-					default:     branch_taken = 1'b0;
-				endcase
-				pc_src           = (branch_taken == 1) ? PC_SRC_BRANCH_JAL: PC_SRC_PC4;
-			end
+                F3_SLTU     :begin 
+                    alu_op_o = ALU_SLTU;
+                end
 
-			OPCODE_LOAD: begin
-				alu_src_a_sel    = ALU_SRC_A_RS1;
-				alu_src_b_sel    = ALU_SRC_B_IMM;
-				reg_write_enable = 1'b1;
-				mem_read         = 1'b1;
-				imm_src         = IMM_I;
-				result_src       = RESULT_SRC_MEM;
-				case (funct3)
-					FUNCT3_LB:  begin mem_size = MEM_BYTE;  mem_usign_load = 0; end
-					FUNCT3_LH:  begin mem_size = MEM_HALFW; mem_usign_load = 0; end
-					FUNCT3_LW:  begin mem_size = MEM_WORD;  mem_usign_load = 0; end
-					FUNCT3_LBU: begin mem_size = MEM_BYTE;  mem_usign_load = 1; end
-					FUNCT3_LHU: begin mem_size = MEM_HALFW; mem_usign_load = 1; end
-					default:    begin mem_size = MEM_WORD;  mem_usign_load = 0; end
-				endcase
-			end
+                F3_XOR      :begin 
+                    alu_op_o = ALU_XOR ;
+                end
+                F3_SRL_SRA  : begin
+                    if (decoded_instr.rtype.funct7 == F7_SRA) begin
+                        alu_op_o = ALU_SRA;
+                    end else begin
+                        alu_op_o = ALU_SRL;
+                    end
+                end
+                F3_OR       :begin
+                     alu_op_o = ALU_OR; 
+                end
+                F3_AND      :begin
+                     alu_op_o = ALU_AND; 
+                end
+                
+                default: alu_op_o = ALU_ADD; // Geçersiz funct3
 
-			OPCODE_STORE: begin
-				alu_src_a_sel    = ALU_SRC_A_RS1;
-				alu_src_b_sel    = ALU_SRC_B_IMM;
-				mem_write        = 1'b1;
-				imm_src         = IMM_S;
-				case (funct3)
-					FUNCT3_SB: begin mem_size = MEM_BYTE;  end
-					FUNCT3_SH: begin mem_size = MEM_HALFW; end
-					FUNCT3_SW: begin mem_size = MEM_WORD;  end
-					default:   begin mem_size = MEM_WORD;  end
-				endcase
-			end
+            endcase 
+        end
 
-			OPCODE_I_TYPE: begin
-				alu_src_a_sel    = ALU_SRC_A_RS1;
-				alu_src_b_sel    = ALU_SRC_B_IMM;
-				reg_write_enable = 1'b1;
-				imm_src         = IMM_I;
-				result_src       = RESULT_SRC_ALU;
-				case (funct3)
-					FUNCT3_ADDI:  alu_control = ALU_ADD;
-					FUNCT3_SLTI:  alu_control = ALU_SLT;
-					FUNCT3_SLTIU: alu_control = ALU_SLTU;
-					FUNCT3_XORI:  alu_control = ALU_XOR;
-					FUNCT3_ORI:   alu_control = ALU_OR;
-					FUNCT3_ANDI:  alu_control = ALU_AND;
-					FUNCT3_SLLI:  alu_control = ALU_SLL;
-					FUNCT3_SRLI:  alu_control = (funct7[5]) ? ALU_SRA : ALU_SRL;
-					default:      alu_control = ALU_ADD;
-				endcase
-			end
+        // I-type load instructions
+        OpcodeLoad: begin : rv32i_i_type_instruction_load
+            
+            // immediate kontrol sinyali
+            imm_source_o = IMM_I;
 
-			OPCODE_R_TYPE: begin
-				alu_src_a_sel    = ALU_SRC_A_RS1;
-				alu_src_b_sel    = ALU_SRC_B_RS2;
-				reg_write_enable = 1'b1;
-				result_src       = RESULT_SRC_ALU;
-				case (funct3)
-					FUNCT3_ADD:  alu_control = (funct7[5]) ? ALU_SUB : ALU_ADD;
-					FUNCT3_SLL:  alu_control = ALU_SLL;
-					FUNCT3_SLT:  alu_control = ALU_SLT;
-					FUNCT3_SLTU: alu_control = ALU_SLTU;
-					FUNCT3_XOR:  alu_control = ALU_XOR;
-					FUNCT3_SRL:  alu_control = (funct7[5]) ? ALU_SRA : ALU_SRL;
-					FUNCT3_OR:   alu_control = ALU_OR;
-					FUNCT3_AND:  alu_control = ALU_AND;
-					default:     alu_control = ALU_ADD;
-				endcase
-			end
+            reg_write_en_o = 1'b1; // load işlemlerinde register'a yazma etkinleştirilir
+            mem_read_en_o  = 1'b1; // Memory okuma aktif
+            op_b_source_o  = ALU_SRC_IMM; // Adres hesabı için (rs1 + imm)
+            
+            wb_sel_o       = WB_MEM;      // Memory'den okunan veri yazılacak
 
-			default: begin
-				// Varsayılan değerler kullanılır
-			end
-		endcase
-	end
+            //funct 3e göre ayrılırlar
+            case (decoded_instr.itype.funct3)
+                F3_LB : begin
+                    mem_size_o     = 2'b00; // byte
+                    mem_sign_ext_o = 1'b1;  // işaret genişletme
+                end
+                F3_LH : begin
+                    mem_size_o     = 2'b01; // half-word
+                    mem_sign_ext_o = 1'b1;  // işaret genişletme
+                end
+                F3_LW : begin
+                    mem_size_o     = 2'b10; // word
+                    mem_sign_ext_o = 1'b0;  // işaret genişletme yok
+                end
+                F3_LBU: begin
+                    mem_size_o     = 2'b00; // byte
+                    mem_sign_ext_o = 1'b0;  // sıfır genişletme
+                end
+                F3_LHU: begin
+                    mem_size_o     = 2'b01; // half-word
+                    mem_sign_ext_o = 1'b0;  // sıfır genişletme
+                end
+                default: ; // no operation
+            endcase
+        end
+
+        // I-type immediate instructions
+        OpcodeOpImm: begin : rv32i_i_type_instruction_imm
+            
+            // immediate kontrol sinyali
+            imm_source_o = IMM_I;
+
+            reg_write_en_o = 1'b1; // immediate işlemler register'a yazar
+            op_b_source_o  = ALU_SRC_IMM; // ikinci operand immediate
+            // wb_sel_o zaten WB_ALU
+
+            // funct3 bakılır, daha sonra funct7 ile ayrım yapılır
+            case (decoded_instr.itype.funct3)
+                F3_ADDI      : begin
+                    alu_op_o = ALU_ADD;
+                end
+
+                F3_SLTI      : begin
+                    alu_op_o = ALU_SLT;
+                end
+
+                F3_SLTIU     : begin
+                    alu_op_o = ALU_SLTU;
+                end
+
+                F3_XORI      : begin
+                    alu_op_o = ALU_XOR;
+                end
+
+                F3_ORI       : begin
+                    alu_op_o = ALU_OR;
+                end
+
+                F3_ANDI      : begin
+                    alu_op_o = ALU_AND;
+                end
+
+                F3_SLLI      : begin
+                    alu_op_o = ALU_SLL;
+                end
+
+                F3_SRLI_SRAI : begin
+                    if (decoded_instr.rtype.funct7 == F7_SRAI) begin
+                        alu_op_o = ALU_SRA;
+                    end
+                    else begin
+                        alu_op_o = ALU_SRL;
+                    end
+                end // Düzeltme: Fazladan parantez silindi
+
+                default: ; // no operation
+            endcase 
+        end
+
+        // I-type jalr instruction
+        OpcodeJalr: begin : rv32i_i_type_instruction_jalr
+            
+            // immediate kontrol sinyali
+            imm_source_o = IMM_I;
+
+            case (decoded_instr.itype.funct3)
+                F3_JALR: begin
+                    // is_jalr_o yerine next_pc_sel_o kullanıyoruz
+                    next_pc_sel_o  = NEXT_PC_ALU; 
+                    
+                    reg_write_en_o = 1'b1; // jalr da registera yazar
+                    alu_op_o       = ALU_ADD; // ALU toplama yapar
+                    op_b_source_o  = ALU_SRC_IMM; // ikinci operand immediate
+                    
+                    wb_sel_o       = WB_PC_PLUS_4; // Dönüş adresi PC+4
+                end
+                default: ; // no operation  
+            endcase
+        end
+
+        // I-type system daha sonra eklenecek
+        /*
+            OpcodeSystem: begin : rv32i_i_type_instruction_system
+                // eklenecek
+                ...
+                ...
+            end
+        */
+
+
+        // S-type store instructions
+        OpcodeStore: begin : rv32i_s_type_instructions
+
+            // immediate kontrol sinyali
+            imm_source_o = IMM_S;
+            
+            op_b_source_o = ALU_SRC_IMM; // Düzeltme: Store için adres hesabında IMM gerekir
+
+            mem_write_en_o = 1'b1; // store işlemlerinde memory'ye yazma etkinleştirilir
+
+            // funct3 bakılır
+            case (decoded_instr.stype.funct3)
+                F3_SB: begin
+                    mem_size_o = 2'b00; // byte
+                end
+                F3_SH: begin
+                    mem_size_o = 2'b01; // half-word
+                end
+                F3_SW: begin
+                    mem_size_o = 2'b10; // word
+                end
+                default: ; // no operation
+            endcase
+        end
+
+        // B-type branch instructions
+        OpcodeBranch: begin : rv32i_b_type_instructions
+
+            // immediate kontrol sinyali
+            imm_source_o = IMM_B;
+
+            is_branch_o = 1'b1; // branch işlemlerinde branch sinyali
+
+            // next_pc_sel_o varsayılan NEXT_PC_4 kalır, 
+            // Core modülünde branch_taken sinyaline göre karar verilir.
+
+            // funct3 bakılır
+            case (decoded_instr.stype.funct3)
+                F3_BEQ : begin
+                    alu_op_o = ALU_SUB;
+                end
+                F3_BNE : begin
+                    alu_op_o = ALU_SUB;
+                end
+                F3_BLT : begin
+                    alu_op_o = ALU_SLT;
+                end
+                F3_BGE : begin
+                    alu_op_o = ALU_SLT;
+                end
+                F3_BLTU: begin
+                    alu_op_o = ALU_SLTU;
+                end
+                F3_BGEU: begin
+                    alu_op_o = ALU_SLTU;
+                end
+                default: alu_op_o= ALU_ADD ; // no operation
+            endcase
+        end 
+
+        // U-type instuructions
+        OpcodeLui: begin : rv32i_u_type_instruction_lui
+            // immediate kontrol sinyali
+            imm_source_o = IMM_U;
+
+            reg_write_en_o = 1'b1;        // register'a yazar
+            alu_op_o       = ALU_ADD;     // LUI için ALU işlemine gerek yok, default ADD
+            op_b_source_o  = ALU_SRC_IMM; // ikinci operand immediate
+            // wb_sel_o -> WB_ALU
+        end
+
+        OpcodeAuipc: begin : rv32i_u_type_instruction_auipc
+            // immediate kontrol sinyali
+            imm_source_o = IMM_U;
+
+            reg_write_en_o = 1'b1;        // register'a yazar
+            alu_op_o       = ALU_ADD;     // toplama işlemi AUIPC için kullanılır.
+            op_a_source_o  = ALU_SRC_PC;  // AUIPC için A operandı PC olmalı
+            op_b_source_o  = ALU_SRC_IMM; // ikinci operand immediate
+            // wb_sel_o -> WB_ALU
+        end
+
+        // J-type jal instruction
+        OpcodeJal: begin : rv32i_j_type_instruction_jal
+            // immediate kontrol sinyali
+            imm_source_o = IMM_J;
+            
+            // JAL için pc+imm 
+            next_pc_sel_o  = NEXT_PC_IMM;
+
+            reg_write_en_o = 1'b1; // jal da registera yazar
+            alu_op_o       = ALU_ADD; // ALU toplama yapar
+            op_b_source_o  = ALU_SRC_IMM; // ikinci operand immediate
+            
+            wb_sel_o       = WB_PC_PLUS_4; // Dönüş adresi PC+4
+        end
+
+        default: ; // no operation
+
+
+    endcase // opcode endcase
+
+end // always_comb
 
 endmodule

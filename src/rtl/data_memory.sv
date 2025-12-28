@@ -1,83 +1,146 @@
-module data_memory
+/*
+   --- OBSIDYEN RISC-V CORE ---
+
+    Module : Data Memory Modülü (Revize: Unaligned Access Support)
+    Author : Furkan YILDIRIM
+
+    Note:
+        - Register ile beraber data yazma okuma işlemi yapıyor
+        - Hizasız erişim (Unaligned Access) desteği için Byte-Addressable yapıya geçildi.
+    
+*/
+
+module data_memory 
     import riscv_pkg::*;
 (
-    input  logic                  clk,
-    input  logic                  mem_read,
-    input  logic                  mem_write,
-    input  mem_size_e             mem_size,       // 00: byte, 01: halfword, 10: word
-    input  logic                  unsigned_load,  // 1: zero-extend, 0: sign-extend
-    input  logic [31:0]           data_addr,
-    input  logic [31:0]           data_write_data,
-    output logic [31:0]           data_read_data
+    input logic             clk_i,
+    input logic             rst_ni,
+    
+    input logic             mem_write_en_i,     // write enable sinyali (clock rising edge ile senkron çalışır)
+    input logic [XLEN-1:0]  addr_i,              // memory adresi
+    input logic [XLEN-1:0]  write_data_i,        // memory'ye yazılacak veri
+
+    input logic [1:0]       mem_size_i,         // memory erişim boyutu (00: byte, 01: half-word, 10: word)
+    input logic             mem_sign_ext_i,      // işaret genişletme sinyali (load işlemleri için, 0 ise unsigned, 1 ise signed)
+    
+
+    output logic [XLEN-1:0] read_data_o         // memory'den okunan veri
 );
 
-    logic [XLEN-1:0] data_mem [0:DMEM_SIZE-1];
+// Eski DATA_ADDR word sayısıydı (2048 Word). 
+// Şimdi Byte sayısı yapıyoruz: 2048 * 4 = 8192 Byte
+localparam MEM_DEPTH = 8192; 
 
-    logic [$clog2(DMEM_SIZE)-1:0] word_index;
-    logic [1:0] byte_offset;
-    logic [7:0] byte_val;
-    logic [15:0] half_val;
+// data memory - ARTIK BYTE ADRESLENEBİLİR (logic [7:0])
+logic [7:0] data_mem [0:MEM_DEPTH-1]; 
 
-    assign word_index = data_addr[11:2];    // 4-byte aligned index
-    assign byte_offset = data_addr[1:0];    // 0 to 3
+//ardisik islemler
 
-    // Write
-    always_ff @(posedge clk) begin
-        if (mem_write) begin
-            case (mem_size)
-                2'b00: begin // SB
-                    case (byte_offset)
-                        2'd0: data_mem[word_index][7:0]   <= data_write_data[7:0];
-                        2'd1: data_mem[word_index][15:8]  <= data_write_data[7:0];
-                        2'd2: data_mem[word_index][23:16] <= data_write_data[7:0];
-                        2'd3: data_mem[word_index][31:24] <= data_write_data[7:0];
-                    endcase
-                end
-                2'b01: begin // SH
-                    case (byte_offset)
-                        2'd0: data_mem[word_index][15:0]  <= data_write_data[15:0];
-                        2'd2: data_mem[word_index][31:16] <= data_write_data[15:0];
-                        default: ; // hizasız erişim yok sayılır
-                    endcase
-                end
-                2'b10: begin // SW
-                    data_mem[word_index] <= data_write_data;
-                end
-            endcase
+always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (!rst_ni) begin
+        // Reset durumunda data memory'yi sıfırla
+        for (int i = 0; i < MEM_DEPTH; i++) begin
+            data_mem[i] <= 8'b0;
         end
+    end 
+
+    /*
+        
+        Yazma işlemi
+    
+    */
+    else if (mem_write_en_i) begin
+        
+        // mem_size'a göre farklı boyutlarda yazma işlemi yap
+        // Not: Artık word hizalaması ([...:2]) yapmadan doğrudan adrese yazıyoruz.
+        case (mem_size_i)
+            2'b10: begin // word (4 Byte Yaz)
+                data_mem[addr_i]     <= write_data_i[7:0];
+                data_mem[addr_i + 1] <= write_data_i[15:8];
+                data_mem[addr_i + 2] <= write_data_i[23:16];
+                data_mem[addr_i + 3] <= write_data_i[31:24];
+            end
+            2'b01: begin // half-word (2 Byte Yaz)
+                data_mem[addr_i]     <= write_data_i[7:0];
+                data_mem[addr_i + 1] <= write_data_i[15:8];
+            end
+            2'b00: begin // byte (1 Byte Yaz)
+                data_mem[addr_i]     <= write_data_i[7:0];
+            end
+            default: ; // no operation
+        endcase
     end
+end
 
-    // Read
-    always_comb begin
-        byte_val = 8'b0;
-        half_val = 16'b0;
-        data_read_data = 32'b0;
+// kombinasyonel islemler
+// Okuma işlemini kolaylaştırmak için geçici byte değişkenleri
+logic [7:0] b0, b1, b2, b3;
 
-        if (mem_read) begin
-            case (mem_size)
-                2'b00: begin // LB / LBU
-                    case (byte_offset)
-                        2'd0: byte_val = data_mem[word_index][7:0];
-                        2'd1: byte_val = data_mem[word_index][15:8];
-                        2'd2: byte_val = data_mem[word_index][23:16];
-                        2'd3: byte_val = data_mem[word_index][31:24];
-                    endcase
-                    data_read_data = unsigned_load ? {24'b0, byte_val} : {{24{byte_val[7]}}, byte_val};
-                end
-                2'b01: begin // LH / LHU
-                    case (byte_offset)
-                        2'd0: half_val = data_mem[word_index][15:0];
-                        2'd2: half_val = data_mem[word_index][31:16];
-                        default: half_val = 16'h0000; // hizasız erişim -> sıfırla
-                    endcase
-                    data_read_data = unsigned_load ? {16'b0, half_val} : {{16{half_val[15]}}, half_val};
-                end
-                2'b10: begin // LW
-                    data_read_data = data_mem[word_index];
-                end
-                default: data_read_data = 32'hDEADBEEF;
-            endcase
+always_comb begin
+    // İstenilen adresten başlayarak 4 byte'ı çekiyoruz
+    b0 = data_mem[addr_i];
+    b1 = data_mem[addr_i + 1];
+    b2 = data_mem[addr_i + 2];
+    b3 = data_mem[addr_i + 3];
+
+    // mem_size'a göre farklı boyutlarda okuma işlemi yap
+    case (mem_size_i)
+        2'b10: begin // word
+            read_data_o = {b3, b2, b1, b0}; // Little Endian
         end
+        2'b01: begin // half-word
+            if (mem_sign_ext_i) begin
+                // işaret genişletme
+                read_data_o = {{16{b1[7]}}, b1, b0};
+            end else begin
+                // sıfır genişletme
+                read_data_o = {16'b0, b1, b0};
+            end
+        end
+
+        2'b00: begin // byte
+            if (mem_sign_ext_i) begin
+                // işaret genişletme
+                read_data_o = {{24{b0[7]}}, b0};
+            end else begin
+                // sıfır genişletme 
+                read_data_o = {24'b0, b0};
+            end
+        end
+        default: read_data_o = '0; // no operation
+    endcase
+
+end
+
+// Testbench için Memory DUMP almamızı sağlayan task
+task dump_memory_contents(input string filename);
+    int fd;
+    logic [31:0] temp_word; // Byte'ları birleştirip göstermek için
+    fd = $fopen(filename, "w");
+    
+    if (fd != 0) begin
+        $display("--------------------------------------------------");
+        $display("--- DATA MEMORY DUMP BAŞLIYOR (%s) ---", filename);
+        $display("--------------------------------------------------");
+        
+        $fdisplay(fd, "Address(Hex)      Word Data(Hex)");
+        $fdisplay(fd, "------------      --------------");
+
+        // Döngü artık byte byte değil, 4'er 4'er artarak word word gösterecek
+        for (int i = 0; i < 400; i = i + 4) begin
+            
+            // 4 byte'ı birleştirip 32-bit Word haline getiriyoruz
+            temp_word = {data_mem[i+3], data_mem[i+2], data_mem[i+1], data_mem[i]};
+            
+            // Word adresi byte adresine çevirerek yazıyoruz
+            $fdisplay(fd, "0x%08h        0x%08h", i, temp_word);
+
+        end
+        $fclose(fd);
+        $display("--- DATA MEMORY DUMP TAMAMLANDI ---");
+    end else begin
+        $display("Hata: Dosya açılamadı: %s", filename);
     end
+endtask
 
 endmodule

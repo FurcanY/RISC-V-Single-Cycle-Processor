@@ -1,0 +1,12 @@
+# Derleme çıktılarını ve obj_dir'i yok say
+obj_dir/
+
+
+# VCD dosyalarını yok say
+file_vcd/
+
+# docs klasöründeki her şeyi yok say. Orda kendime göre notlar tutacağım.
+docs/
+
+# python kodlarını yok say
+python/

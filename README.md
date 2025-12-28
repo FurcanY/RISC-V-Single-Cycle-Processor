@@ -54,29 +54,8 @@ RV32I, RISC-V mimarisinin temel 32-bit integer instruction set'idir. Aşağıdak
 - `jalr rd, offset(rs1)`: Jump and link register
 ---
 
-![](docs/SingleCycleProcessor.jpg)
----
-	
-| Modül | Açıklama |
-|--------|----------|
-|**program_counter**|instruction memory'nin adres değerini tutan değer|
-|**instruction_memory**|buyrukların tutulduğu hafıza|
-|**register_file**|kaydedicilere ulaştığımız, verilerini değiştirdiğimiz birim|
-|**immediate_extend**|instruction tipine göre immediate değerini genişleten birim|
-|**alu**|aritmetik lojik ve kaydırma işlemlerini yapan birim|
-|**data_memory**|verilerin yazılıp, okunabildiği birim|
-|**control_unit**|her bir modülün çalışması için sinyal oluşturan birim|
-|**core_model**|bütün modüllerin birleştiği, tek vuruşluk işlemci|
-
----
-
-### Testbench çalıştırma
-
-Makefile içerisindeki `TB        ?= core_model_tb` içeriğini kullanacağınız testbench dosyasının adı ile değiştiriniz, daha sonra `make run` kodunu terminale yazınız.
-
-ya da terminale direkt `make run TB=<testbenc_dosyasi_adi>` yazabilirsiniz.
 
 
 ---
 
-**verilator --version:** Verilator 5.016 2023-09-16 rev v5.014-149-g57c816f90
+**verilator --version:** Verilator 5.032 2025-01-01 rev (Debian 5.032-1+b2)
