@@ -26,7 +26,7 @@ logic  [XLEN-1:0] instr_mem [INSTR_ADDR-1:0] ; // instruction memory - word adre
 
 // test icin basit bir program yukleme
 initial begin
-    $readmemh("./memory/data_mem_non_algm_test.hex", instr_mem);
+    $readmemh("./memory/golden_mem.hex", instr_mem);
 end
 
 
