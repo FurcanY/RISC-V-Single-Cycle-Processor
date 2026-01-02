@@ -119,6 +119,7 @@ task dump_memory_contents(input string filename);
     fd = $fopen(filename, "w");
     
     if (fd != 0) begin
+        logic [31:0] offset = 32'h10000000;
         $display("--------------------------------------------------");
         $display("--- DATA MEMORY DUMP BAŞLIYOR (%s) ---", filename);
         $display("--------------------------------------------------");
@@ -130,10 +131,10 @@ task dump_memory_contents(input string filename);
         for (int i = 0; i < 400; i = i + 4) begin
             
             // 4 byte'ı birleştirip 32-bit Word haline getiriyoruz
-            temp_word = {data_mem[i+3], data_mem[i+2], data_mem[i+1], data_mem[i]};
+            temp_word = {data_mem[offset+i+3], data_mem[offset+i+2], data_mem[offset+i+1], data_mem[offset+i]};
             
             // Word adresi byte adresine çevirerek yazıyoruz
-            $fdisplay(fd, "0x%08h        0x%08h", i, temp_word);
+            $fdisplay(fd, "0x%08h        0x%08h", offset+i, temp_word);
 
         end
         $fclose(fd);

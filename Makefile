@@ -4,7 +4,7 @@ ALL_TB    := $(wildcard ./tb/*.sv)
 ALL_FILES := ${SV_FILES} ${ALL_TB}
 
 # Varsayılan Testbench (TB= ile override edilebilir)
-TB        ?= register_file_tb
+TB        ?= obsidyen_core_tb
 TOP       := $(TB)
 TB_FILE   := ./tb/$(TB).sv
 

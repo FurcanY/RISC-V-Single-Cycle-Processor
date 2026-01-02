@@ -47,6 +47,7 @@ module control_unit
     output logic                is_branch_o,             
     output next_pc_select_e     next_pc_sel_o,   // PC kaynak seçimi (JAL/JALR/Branch yönetimi)
 
+    output logic                force_alu_a_zero_o,  // alu op_a_i = 0 bypass yapılır
     output op_a_source_e        op_a_source_o,
     output op_b_source_e        op_b_source_o
 );
@@ -74,6 +75,7 @@ always_comb begin : control_unit_logic
     is_branch_o       = 1'b0;
     next_pc_sel_o     = NEXT_PC_4;   // Varsayılan PC+4
 
+    force_alu_a_zero_o  = 1'b0;
     op_a_source_o     = ALU_SRC_RD1;
     op_b_source_o     = ALU_SRC_RD2;
 
@@ -259,7 +261,7 @@ always_comb begin : control_unit_logic
             // immediate kontrol sinyali
             imm_source_o = IMM_S;
             
-            op_b_source_o = ALU_SRC_IMM; // Düzeltme: Store için adres hesabında IMM gerekir
+            op_b_source_o = ALU_SRC_IMM; // Store için adres hesabında IMM gerekir
 
             mem_write_en_o = 1'b1; // store işlemlerinde memory'ye yazma etkinleştirilir
 
@@ -321,6 +323,8 @@ always_comb begin : control_unit_logic
             reg_write_en_o = 1'b1;        // register'a yazar
             alu_op_o       = ALU_ADD;     // LUI için ALU işlemine gerek yok, default ADD
             op_b_source_o  = ALU_SRC_IMM; // ikinci operand immediate
+            op_a_source_o  = ALU_SRC_RD1;
+            force_alu_a_zero_o = 1'b1;      // op_a_i force 0 bypass edilir.
             // wb_sel_o -> WB_ALU
         end
 

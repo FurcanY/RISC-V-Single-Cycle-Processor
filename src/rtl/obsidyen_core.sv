@@ -79,7 +79,7 @@ logic                is_branch_o;       // branch unit kontrol sinyali
 next_pc_select_e     next_pc_sel_o;     // pc next mux'un kontrol sinyali
 op_a_source_e        op_a_source_o;     // alu A girişinin mux kontrol sinyali
 op_b_source_e        op_b_source_o;     // alu B girişinin mux kontrol sinyali
-
+logic                force_alu_a_zero;  // alu op_a_i LUI komutu için 0 girişi verilir.
 
 // ----ALU Sinyalleri----
 
@@ -164,7 +164,16 @@ end
 
 // ALU A,B MUX
 always_comb begin: alu_operand_mux
-    op_a_i = (op_a_source_o == ALU_SRC_PC) ? pc_out_o : rs1_data_o;
+    // A Operandı MUX
+    if (force_alu_a_zero) begin
+        op_a_i = 32'h0000_0000;  // LUI için 0
+    end
+    else if (op_a_source_o == ALU_SRC_PC) begin
+        op_a_i = pc_out_o;       // AUIPC, JAL için PC
+    end
+    else begin
+        op_a_i = rs1_data_o;     // Normal: Register File'dan rs1
+    end
     op_b_i = (op_b_source_o == ALU_SRC_IMM) ? imm_extended_o : rs2_data_o;
 end
 
@@ -220,7 +229,8 @@ control_unit c_unit (
     .is_branch_o    (is_branch_o),
     .next_pc_sel_o  (next_pc_sel_o),
     .op_a_source_o  (op_a_source_o),
-    .op_b_source_o  (op_b_source_o)
+    .op_b_source_o  (op_b_source_o),
+    .force_alu_a_zero_o(force_alu_a_zero)
 );
 
 // ALU
